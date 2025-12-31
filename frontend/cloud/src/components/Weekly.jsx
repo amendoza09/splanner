@@ -1,30 +1,6 @@
 import { useState, useEffect } from 'react'
 import { format, startOfWeek, endOfWeek, getDay, eachDayOfInterval } from 'date-fns';
 
-const events = [
-          {
-                title: "work",
-                startDate: "12-18-2025",
-                endDate: "12-20-2025",
-                startTime: "8:30 AM",
-                endTime: "5:30 PM"
-          },
-          {
-                title: "work",
-                startDate: "12-23-2025",
-                endDate: "12-23-2025",
-                startTime: "8:30 AM",
-                endTime: "5:30 PM"
-            },
-            {
-                title: "work",
-                startDate: "12-31-2025",
-                endDate: "12-31-2025",
-                startTime: "8:30 AM",
-                endTime: "5:30 PM"
-            }
-        ]
-
 const WeeklyView = ({ members }) => {
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [isExpanded, setIsExpanded] = useState(true);
@@ -89,8 +65,9 @@ const WeeklyView = ({ members }) => {
     return (
         <div className="h-screen flex flex-col overflow-hidden">
             {/* Days of the week */}
-            <div className="sticky top-0 z-20">
-                <div className="grid grid-cols-7 gap-5 text-center px-2 border-b border-black-500">
+            <div className="sticky top-0 z-20 w-full">
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center px-2 border-b border-black-500">
+                    <div />
                     {dayAbrevs.map((day, index) => (
                         <div key={index} className="h-[50px] flex items-center justify-center font-medium">
                             <p>{day}</p>
@@ -98,7 +75,8 @@ const WeeklyView = ({ members }) => {
                     ))}
                 </div>
                 {/* week days */}
-                <div className="flex flex-row  border-b border-black-500"> 
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center px-2 border-b border-black-500">
+                    <div />
                     {generateWeekDays(new Date(selectedDate)).map((item, i) => {
                         if(!item) {
                             return <div key={i} className="h-[50px]"/>
@@ -108,6 +86,7 @@ const WeeklyView = ({ members }) => {
                         const isToday = formatDate === currentDate;
 
                         return (
+                            
                             <button
                                 key={formatDate}
                                 onClick={() => handleDayPress(item)}
@@ -123,39 +102,38 @@ const WeeklyView = ({ members }) => {
             </div>
             
             {/* Time grid */}
-            <div className="flex-1 h-[50vh] py-5 overflow-y-auto w-full relative">
+            <div className="flex-1 h-[50vh] py-5 overflow-y-auto w-full relative left-0 no-scrollbar">
                 {hours.map((hour) => (
                     <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] h-[50px] items-center">        
-                        <div className="text-gray-500 text-xs text-right px-2 left-0">
+                        <div className="text-gray-500 text-xs text-right left-0 px-2">
                             {formatHour(hour)}
                         </div>
                         {dayAbrevs.map((day) => (
-                            <div key={`${day}-${hour}`} className="border-b" />
+                            <div key={`${day}-${hour}`} className="border-b " />
                         ))}
                     </div>
                 ))}
 
                 {/* Events */} 
                 <div className="absolute inset-0 grid grid-cols-[60px_repeat(7, 1fr)]" style={{ height: 24 * 50 }}>
-                    <div />
-                        {(selectedDate ? generateWeekDays(new Date(selectedDate)) : generateWeekDays(new Date())).map((day) => {
+
+                       {generateWeekDays(new Date(selectedDate)).map((day, index) => {
                         const dateKey = format(day, "yyyy-MM-dd");
-                        const dayEvents = allEvents.filter(
-                            e => e.startDate === dateKey
-                        );
+                        const dayEvents = allEvents.filter(e => e.startDate === dateKey);
                         
                         return (
-                            <div key={dateKey} className="relative pointer-events-auto">
+                            <div key={dateKey} className="justify-center flex relative" style={{ gridColumnStart: index + 2 }}>
                                 {dayEvents.map((event,i) => {
                                     const start = timeToMinutes(event.startTime);
                                     const end = timeToMinutes(event.endTime);
 
-                                    const top = (start / 60) * 50;
+                                    const top = ((start / 60) * 50) + 45;
                                     const height = ((end-start)/60) * 50;
                                     return (
+                                         
                                         <div
                                             key={i}
-                                            className="x-20 absolute rounded-md bg-blue-500 text-white text-xs px-2 py-1"
+                                            className="right-1 left-1 absolute text-center rounded-md bg-blue-500 text-white text-xs px-1"
                                             style={{ top, height }}
                                         >
                                             <div className="font-semibold">{event.title}</div>

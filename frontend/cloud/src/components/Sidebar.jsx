@@ -14,7 +14,7 @@ const Sidebar = ({ members }) => {
     }
 
     return(
-        <div className="h-screen w-[10rem] border border-1 p-8 flex flex-col">
+        <div className="h-screen w-[8rem] border border-1 py-8 px-5 flex flex-col">
             <div className="w-full flex flex-col items-start gap-5">
                 {members.map((member, i) => {
                     return (
