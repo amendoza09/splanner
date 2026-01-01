@@ -99,7 +99,14 @@ const WeeklyView = ({ members, selectedDate }) => {
                             <button
                                 key={formatDate}
                                 onClick={() => handleDayPress(item)}
-                                className={`h-[50px] w-full`}
+                                className={`h-[50px] w-full
+                                    ${isSelected ? "border-2 border-[#b398f5]" : ""}
+                                `}
+                                style={{
+                                    background: isToday
+                                    ? "linear-gradient(to top, #b398f5 1%, transparent 30%)"
+                                    : undefined,
+                                }}
                             >
                                 <span>
                                     {format(item, 'd')}

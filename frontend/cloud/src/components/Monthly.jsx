@@ -148,12 +148,10 @@ const MonthlyView = ({ members, onDayPress }) => {
           return (
             <div
                 key = {formatDate}
-                className={`h-full w-full px-5 relative cursor-pointer border-black
-                  ${isToday ? 'border border-blue-500' : ''}
-                `}
+                className={`h-full w-full px-5 relative cursor-pointer`}
                 onClick={() => onDayPress(item)}
               >
-                <span className={`absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold' : ''}`}>
+                <span className={`h-6 w-6 absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[#b398f5] rounded-xl' : ''}`}>
                   {format(item, 'd')}
                 </span>
 
