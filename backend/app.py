@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models import Group
@@ -12,6 +13,13 @@ import random
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 @app.get("/")
 def read_root( db:Session = Depends(get_db)):
     return {"Status": "connected"}
@@ -19,6 +27,7 @@ def read_root( db:Session = Depends(get_db)):
 # get group
 @app.get("/group/{group_code}")
 def group(group_code: str, db: Session = Depends(get_db)):
+    print("getting group")
     group=(
         db.query(Group)
         .options(joinedload(Group.users).joinedload(User.events))
@@ -35,6 +44,7 @@ def group(group_code: str, db: Session = Depends(get_db)):
             {
                 "user_id": user.id,
                 "name": user.name,
+                "color": user.color,
                 "events": [
                     {
                         "event_id": event.id,

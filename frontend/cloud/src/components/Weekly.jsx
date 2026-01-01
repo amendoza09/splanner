@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { format, startOfWeek, endOfWeek, getDay, eachDayOfInterval } from 'date-fns';
 
-const WeeklyView = ({ members }) => {
-    const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+const WeeklyView = ({ members, selectedDate }) => {
     const [isExpanded, setIsExpanded] = useState(true);
     const [dayPosition, setDayPosition] = useState(null);
     const [dayPositions, setDayPositions] = useState({});
@@ -21,11 +20,21 @@ const WeeklyView = ({ members }) => {
         return hours * 60 + minutes;
     }
 
-    const allEvents = members.flatMap(member => 
-        member.events.map(event => ({
-            ...event,
+    const allEvents = members.flatMap(member =>
+        (member.events || []).map(event => {
+            const start = new Date(event.start_time);
+            const end = new Date(event.end_time);
+
+            return {
+            id: event.event_id,
+            title: event.title,
+            date: format(start, "yyyy-MM-dd"),
+            startMinutes: start.getHours() * 60 + start.getMinutes(),
+            endMinutes: end.getHours() * 60 + end.getMinutes(),
             member: member.name,
-        })),
+            color: member.color,
+            };
+        })
     );
     
     const generateWeekDays = (date) => {
@@ -59,13 +68,13 @@ const WeeklyView = ({ members }) => {
     };
 
     const handleReset = () => {
-      setSelectedDate(null);
+      // setSelectedDate(null);
     }
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden">
+        <div className="h-[93vh] flex flex-col overflow-hidden">
             {/* Days of the week */}
-            <div className="sticky top-0 z-20 w-full">
+            <div className="sticky top-0 z-20 ">
                 <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center px-2 border-b border-black-500">
                     <div />
                     {dayAbrevs.map((day, index) => (
@@ -77,7 +86,7 @@ const WeeklyView = ({ members }) => {
                 {/* week days */}
                 <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center px-2 border-b border-black-500">
                     <div />
-                    {generateWeekDays(new Date(selectedDate)).map((item, i) => {
+                    {generateWeekDays(selectedDate ? new Date(selectedDate) : new Date()).map((item, i) => {
                         if(!item) {
                             return <div key={i} className="h-[50px]"/>
                         }
@@ -102,7 +111,7 @@ const WeeklyView = ({ members }) => {
             </div>
             
             {/* Time grid */}
-            <div className="flex-1 h-[50vh] py-5 overflow-y-auto w-full relative left-0 no-scrollbar">
+            <div className="flex-1 h-[45vh] py-5 overflow-y-auto w-full relative left-0 no-scrollbar">
                 {hours.map((hour) => (
                     <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] h-[50px] items-center">        
                         <div className="text-gray-500 text-xs text-right left-0 px-2">
@@ -119,13 +128,13 @@ const WeeklyView = ({ members }) => {
 
                        {generateWeekDays(new Date(selectedDate)).map((day, index) => {
                         const dateKey = format(day, "yyyy-MM-dd");
-                        const dayEvents = allEvents.filter(e => e.startDate === dateKey);
+                        const dayEvents = allEvents.filter(e => e.date === dateKey);
                         
                         return (
                             <div key={dateKey} className="justify-center flex relative" style={{ gridColumnStart: index + 2 }}>
                                 {dayEvents.map((event,i) => {
-                                    const start = timeToMinutes(event.startTime);
-                                    const end = timeToMinutes(event.endTime);
+                                    const start = event.startMinutes;
+                                    const end = event.endMinutes;
 
                                     const top = ((start / 60) * 50) + 45;
                                     const height = ((end-start)/60) * 50;
@@ -133,8 +142,8 @@ const WeeklyView = ({ members }) => {
                                          
                                         <div
                                             key={i}
-                                            className="right-1 left-1 absolute text-center rounded-md bg-blue-500 text-white text-xs px-1"
-                                            style={{ top, height }}
+                                            className="right-1 left-1 absolute text-center rounded-md text-white text-xs px-1"
+                                            style={{ top, height, backgroundColor: event.color }}
                                         >
                                             <div className="font-semibold">{event.title}</div>
                                             <div className="opacity-80">{event.member}</div>

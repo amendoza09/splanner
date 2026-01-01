@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, 
   addMonths, subMonths, getDay } from 'date-fns';
 
-const MonthlyView = ({ members }) => {
+const MonthlyView = ({ members, onDayPress }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isExpanded, setIsExpanded] = useState(true);
@@ -61,8 +61,8 @@ const MonthlyView = ({ members }) => {
     const map = {};
     members.forEach(member => {
       member.events.forEach(event => {
-        const start = new Date(event.startDate);
-        const end = new Date(event.endDate);
+        const start = new Date(event.start_time);
+        const end = new Date(event.end_time);
         let current = new Date(start);
 
         while (current <= end) {
@@ -80,8 +80,38 @@ const MonthlyView = ({ members }) => {
     return map;
   }, [members]);
 
+  const formatTime = (startTime, endTime) => {
+    const format = (date) => {
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const period = hours >= 12 ? "PM" : "AM";
+
+      hours = hours % 12 || 12;
+
+      return minutes === 0
+        ? `${hours}`
+        : `${hours}:${minutes.toString().padStart(2, "0")}`;
+    };
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    const startFormatted = format(start);
+    const endFormatted = format(end);
+
+    const samePeriod =
+      start.getHours() < 12 === end.getHours() < 12;
+
+    const startPeriod = start.getHours() >= 12 ? "PM" : "AM";
+    const endPeriod = end.getHours() >= 12 ? "PM" : "AM";
+
+    return samePeriod
+      ? `${startFormatted}–${endFormatted} ${endPeriod}`
+      : `${startFormatted} ${startPeriod}–${endFormatted} ${endPeriod}`;
+  };
+
   return (
-    <div className="flex flex-col w-[calc(100vw-10rem)] h-screen">
+    <div className="flex flex-col w-[calc(100vw-8rem)] h-full">
       {/* Agenda Header */}
       <div className="flex flex-row justify-between px-10 py-[30px] items-center">
         <button className="px-20" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
@@ -119,11 +149,9 @@ const MonthlyView = ({ members }) => {
             <div
                 key = {formatDate}
                 className={`h-full w-full px-5 relative cursor-pointer border-black
-                  ${isSelected ? 'bg-blue-400' : 'text-black'}
                   ${isToday ? 'border border-blue-500' : ''}
                 `}
-                onClick={() => handleDayPress(item)}
-                
+                onClick={() => onDayPress(item)}
               >
                 <span className={`absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold' : ''}`}>
                   {format(item, 'd')}
@@ -134,10 +162,10 @@ const MonthlyView = ({ members }) => {
                     {eventsByDate[formatDate]?.map((event, j) => (
                       <div 
                         key={j} 
-                        className="text-xs bg-gray-200 rounded px-1 truncate h-8 items-center flex justify-center"
+                        className="text-xs bg-gray-200 rounded truncate h-8 items-center flex justify-center"
                         style={{ backgroundColor: event.memberColor, color: 'white' }}
                       >
-                        {event.title} ({event.startTime} - {event.endTime})
+                        {event.title} ({formatTime(event.start_time, event.end_time)})
                       </div>
                     ))}
                   </div>

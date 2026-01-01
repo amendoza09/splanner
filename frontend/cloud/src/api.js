@@ -1,0 +1,25 @@
+import axios from 'axios';
+
+const API = axios.create({
+  baseURL: "http://127.0.0.1:8000",
+});
+
+export const getGroupByCode = async (groupCode) => {
+    try {
+        const res = await API.get(`/group/${groupCode}`);
+        return res.data;
+    } catch(err) {
+        console.error("failed to fetch group:", err);
+        return { users: [] };
+    }
+};
+
+export const addUserToGroup = async (groupCode, name) => {
+  const res = await API.post(`/group/code/${groupCode}/user?name=${name}`);
+  return res.data;
+};
+
+export const addEventToUser = async (userId, event) => {
+  const res = await API.post(`/user/${userId}/event`, event);
+  return res.data;
+};
