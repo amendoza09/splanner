@@ -14,12 +14,28 @@ export const getGroupByCode = async (groupCode) => {
     }
 };
 
-export const addUserToGroup = async (groupCode, name) => {
-  const res = await API.post(`/group/code/${groupCode}/user?name=${name}`);
+
+export const getMembers = async (groupCode) => {
+    try {
+        const res = await API.get(`/group/code/${groupCode}/members`);
+        return res.data;
+    } catch(err) {
+        console.error("failed to fetch group:", err);
+        return { users: [] };
+    }
+};
+
+export const addUserToGroup = async (groupCode, member) => {
+  const res = await API.post(`/group/code/${groupCode}/members`, member);
   return res.data;
 };
 
 export const addEventToUser = async (userId, event) => {
-  const res = await API.post(`/user/${userId}/event`, event);
+  const res = await API.post(`/members/${userId}/events`, event);
   return res.data;
 };
+
+export const createGroup = async () => {
+  const res = await API.post("/group");
+  return res.data;
+}

@@ -111,9 +111,9 @@ const MonthlyView = ({ members, onDayPress }) => {
   };
 
   return (
-    <div className="flex flex-col w-[calc(100vw-8rem)] h-full">
+    <div className="flex flex-col w-[calc(100vw-8rem)] h-[90vh]">
       {/* Agenda Header */}
-      <div className="flex flex-row justify-between px-10 py-[30px] items-center">
+      <div className="flex flex-row justify-between px-10 pb-[30px] pt-[10px] items-center">
         <button className="px-20" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
           <p>{'<'}</p>
         </button>
@@ -135,7 +135,7 @@ const MonthlyView = ({ members, onDayPress }) => {
       </div>
 
       {/* number days */}
-      <div className="grid grid-cols-7 h-full ">
+      <div className="grid grid-cols-7 h-full pr-3">
         {generateMonthDays(currentMonth).map((item, i)=> {
           if(!item) {
             return <div key={i} className="h-full"/>
@@ -148,7 +148,7 @@ const MonthlyView = ({ members, onDayPress }) => {
           return (
             <div
                 key = {formatDate}
-                className={`h-full w-full px-5 relative cursor-pointer`}
+                className={`h-full w-full relative cursor-pointer`}
                 onClick={() => onDayPress(item)}
               >
                 <span className={`h-6 w-6 absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[#b398f5] rounded-xl' : ''}`}>
@@ -156,7 +156,7 @@ const MonthlyView = ({ members, onDayPress }) => {
                 </span>
 
                 {/* events */}
-                  <div className="flex flex-col mt-8 gap-1">
+                  <div className="flex flex-col mt-8 px-1 gap-1">
                     {eventsByDate[formatDate]?.map((event, j) => (
                       <div 
                         key={j} 
@@ -167,8 +167,6 @@ const MonthlyView = ({ members, onDayPress }) => {
                       </div>
                     ))}
                   </div>
-
-                  {/* add event button */}
             </div>
           )
         })}

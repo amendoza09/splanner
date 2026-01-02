@@ -149,7 +149,7 @@ const WeeklyView = ({ members, selectedDate }) => {
                                          
                                         <div
                                             key={i}
-                                            className="right-1 left-1 absolute text-center rounded-md text-white text-xs px-1"
+                                            className="right-1 left-1 pt-3 absolute text-center rounded-md text-black text-s px-1 opacity-70"
                                             style={{ top, height, backgroundColor: event.color }}
                                         >
                                             <div className="font-semibold">{event.title}</div>

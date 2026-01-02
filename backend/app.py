@@ -87,9 +87,25 @@ def create_group(db: Session = Depends(get_db)):
     return {"group_id": new_group.id, "group_code": new_group.code}
 
 # get users from specific group
-@app.get("/users")
-def users():
-    return {"users" : []}
+@app.get("/group/code/{group_code}/members")
+def get_group_members(group_code: str, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.code == group_code).first()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    users = db.query(User).filter(User.group_id == group.id).all()
+
+    return {
+        "users": [
+            {
+                "user_id": user.id,
+                "name": user.name,
+                "color": user.color
+            }
+            for user in users
+        ]
+    }
 
 # get events from users
 
@@ -124,13 +140,17 @@ def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
     }
 
 # add user to group
+class AddUserRequest(BaseModel):
+    name: str
+    color: str
+    
 @app.post("/group/code/{group_code}/members")
-def add_user(group_code: str, name: str, color: str, db: Session = Depends(get_db)):
+def add_user(group_code: str, payload: AddUserRequest, db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.code == group_code).first()
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
-    new_user = User(name=name, color=color, group_id=group.id)
+    new_user = User(name=payload.name, color=payload.color, group_id=group.id)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -138,6 +158,7 @@ def add_user(group_code: str, name: str, color: str, db: Session = Depends(get_d
     return {
         "user_id": new_user.id,
         "name": new_user.name,
+        "color": new_user.color,
         "group_id": new_user.group_id
     }
     

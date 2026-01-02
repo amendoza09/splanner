@@ -1,17 +1,26 @@
 import { useState } from "react";
+import { addUserToGroup } from '../api';
+import { IoSettingsOutline } from "react-icons/io5";
 import AddMember from "./AddMember";
 import Member from './Member';
+import Settings from "./Settings";
 
-const Sidebar = ({ members, groupCode }) => {
+const Sidebar = ({ members, groupCode, onNewMember, onLogout }) => {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [memberOpen, setMemberOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState(null);
 
-    const handleAddMember = () => {
-        // api call to add person to database based on group code
-        console.log("Member added");
-        setIsAddOpen(false);
-    }
+    const handleAddMember = async (member) => {
+        try {
+            await addUserToGroup(groupCode, member);
+            await onNewMember();
+            setIsAddOpen(false);
+        } catch(e) {
+            alert("Failed to add member");
+        }
+    };
+    
     return(
         <div className="h-screen w-[8rem] border border-1 py-8 px-5 flex flex-col">
             <div className="w-full flex flex-col items-start gap-5">
@@ -31,8 +40,11 @@ const Sidebar = ({ members, groupCode }) => {
                 <button onClick={()=> setIsAddOpen(true)}>+</button>
             </div>
             <div className="mt-[auto]">
-                <p className="text-gray-500 text-sm">Group Code: </p>
-                <p className="text-gray-500 text-sm">{groupCode}</p>
+                <div className="justify-center flex my-5">
+                    <button onClick={()=> setSettingsOpen(true)}>
+                        <IoSettingsOutline size={32} color="gray" />
+                    </button>
+                </div>
             </div>
 
             <AddMember
@@ -44,6 +56,12 @@ const Sidebar = ({ members, groupCode }) => {
                 isOpen={memberOpen}
                 onClose={() => setMemberOpen(false)}
                 member={selectedMember}
+            />
+            <Settings 
+                isOpen={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                groupCode={groupCode}
+                onLogout={onLogout}
             />
         </div>
     );
