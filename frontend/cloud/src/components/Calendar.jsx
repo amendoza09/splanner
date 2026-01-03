@@ -6,9 +6,9 @@ import WeeklyView from "./Weekly"
 import MonthlyView from "./Monthly"
 import AddEvent from './AddEvent'
 
-const Calendar = ({ members }) => {
+const Calendar = ({ members, onNewEvent}) => {
     const [view, setView] = useState("week");
-    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(new Date());
     const [addEventOpen, setAddEventOpen] = useState(false);
 
     return(
@@ -39,13 +39,14 @@ const Calendar = ({ members }) => {
                 onClick={() => setAddEventOpen(true)}
                 className="absolute bottom-10 right-10  flex items-center justify-center"
             >
-                <IoAddCircle size={64} color="#91f573" />
+                <IoAddCircle size={64} color="var(--green)" />
             </button>
             <div className="flex-1">
                     <AddEvent
                         isOpen={addEventOpen}
                         onClose={() => setAddEventOpen(false)}
                         members={members}
+                        onNewEvent={onNewEvent}
                     />
             </div>
 

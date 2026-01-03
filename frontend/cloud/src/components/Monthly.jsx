@@ -35,7 +35,9 @@ const MonthlyView = ({ members, onDayPress }) => {
     return fullMonthDays;
   };
   
-  
+  const openEvent = () => {
+    {/* stuff for event card */}
+  }
 
   const handleDayPress = (day) => {
     const formatDate = format(day, 'yyyy-MM-dd');
@@ -151,7 +153,7 @@ const MonthlyView = ({ members, onDayPress }) => {
                 className={`h-full w-full relative cursor-pointer`}
                 onClick={() => onDayPress(item)}
               >
-                <span className={`h-6 w-6 absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[#b398f5] rounded-xl' : ''}`}>
+                <span className={`h-6 w-6 absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[var(--red)] rounded-xl' : ''}`}>
                   {format(item, 'd')}
                 </span>
 
@@ -163,7 +165,9 @@ const MonthlyView = ({ members, onDayPress }) => {
                         className="text-xs bg-gray-200 rounded truncate h-8 items-center flex justify-center"
                         style={{ backgroundColor: event.memberColor, color: 'white' }}
                       >
-                        {event.title} ({formatTime(event.start_time, event.end_time)})
+                        <button onClick={() => openEvent(event)}>
+                          {event.title} ({formatTime(event.start_time, event.end_time)})
+                        </button>
                       </div>
                     ))}
                   </div>

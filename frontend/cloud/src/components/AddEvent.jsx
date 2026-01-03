@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { addEventToUser } from '../api';
 
-const AddEvent = ({ isOpen, onClose, members, onEventAdded}) => {
+const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
     const [title, setTitle] = useState("");
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
     const [selectedMember, setSelectedMember] = useState(null);
+    const [notes, setNotes] = useState("");
 
     if(!isOpen) return null;
 
@@ -19,15 +20,17 @@ const AddEvent = ({ isOpen, onClose, members, onEventAdded}) => {
             await addEventToUser(selectedMember.user_id, {
                 title,
                 start_time: `${startTime}:00`,
-                end_time: `${endTime}:00` 
+                end_time: `${endTime}:00`,
+                notes,
             });
             
-            onEventAdded?.();
+            onNewEvent?.();
             onClose();
 
             setTitle("");
             setStartTime("");
             setEndTime("");
+            setNotes("");
             setSelectedMember(null);
         } catch(e) {
             alert("Failed to create event");
@@ -70,6 +73,12 @@ const AddEvent = ({ isOpen, onClose, members, onEventAdded}) => {
                 placeholder="end time"
                 className="border border-gray-300 rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onChange={(e) => setEndTime(e.target.value)}
+            />
+            <input
+                type="text"
+                placeholder="Notes"
+                className="border border-gray-300 rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setNotes(e.target.value)}
             />
             
           </div>

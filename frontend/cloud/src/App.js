@@ -13,8 +13,13 @@ function App() {
 
   const enterGroup = async(code) => {
     const data = await getGroupByCode(code);
+    const normalizedMembers = data.users.map(user => ({
+      ...user,
+      events: user.events ?? []
+    }));
+
     setGroupCode(code);
-    setMembers(data.users);
+    setMembers(normalizedMembers);
     localStorage.setItem("groupCode", code);
   }
 
@@ -55,6 +60,15 @@ function App() {
     } catch(e) {
       alert("failed to get members");
     }
+  };
+
+  const getNewEvents = async() => {
+    try {
+      const data = await getMembers(groupCode);
+      setMembers(data.users);
+    }catch(e) {
+      alert("failed to get any new events");
+    }
   }
 
   useEffect(() => {
@@ -76,7 +90,7 @@ function App() {
   return (
     <div className="flex flex-row w-screen">
         <Sidebar members={members} groupCode={groupCode} onNewMember={getNewMembers} onLogout={handleLogout}/>
-        <Calendar members={members} />
+        <Calendar members={members} onNewEvent={getNewEvents} />
     </div>
   );
 }

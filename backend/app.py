@@ -114,6 +114,7 @@ class EventCreate(BaseModel):
     title: str
     start_time: datetime | None = None
     end_time: datetime | None = None
+    notes: str | None = None
 
 @app.post("/members/{user_id}/events")
 def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
@@ -125,6 +126,7 @@ def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
         title=event.title, 
         start_time=event.start_time,
         end_time=event.end_time,
+        notes=event.notes,
         user_id=user.id
     )
     db.add(new_event)
@@ -136,6 +138,7 @@ def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
         "title": new_event.title,
         "start_time": new_event.start_time,
         "end_time": new_event.end_time,
+        "notes": new_event.notes,
         "user_id": new_event.user_id
     }
 

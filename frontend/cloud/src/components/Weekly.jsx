@@ -72,7 +72,7 @@ const WeeklyView = ({ members, selectedDate }) => {
     }
 
     return (
-        <div className="h-[93vh] flex flex-col overflow-hidden">
+        <div className="h-[92vh] flex flex-col overflow-hidden">
             {/* Days of the week */}
             <div className="sticky top-0 z-20 ">
                 <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center px-2 border-b border-black-500">
@@ -102,13 +102,8 @@ const WeeklyView = ({ members, selectedDate }) => {
                                 className={`h-[50px] w-full
                                     ${isSelected ? "border-2 border-[#b398f5]" : ""}
                                 `}
-                                style={{
-                                    background: isToday
-                                    ? "linear-gradient(to top, #b398f5 1%, transparent 30%)"
-                                    : undefined,
-                                }}
                             >
-                                <span>
+                                <span className={` px-2 py-1 ${isToday ? 'font-semibold bg-[var(--red)] rounded-full' : ''}`}>
                                     {format(item, 'd')}
                                 </span>
                             </button>
@@ -118,10 +113,10 @@ const WeeklyView = ({ members, selectedDate }) => {
             </div>
             
             {/* Time grid */}
-            <div className="flex-1 h-[45vh] py-5 overflow-y-auto w-full relative left-0 no-scrollbar">
+            <div className="flex-1 h-[45vh] py-5 px-2 overflow-y-auto w-full relative no-scrollbar">
                 {hours.map((hour) => (
                     <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] h-[50px] items-center">        
-                        <div className="text-gray-500 text-xs text-right left-0 px-2">
+                        <div className="text-gray-500 text-xs text-right pr-5">
                             {formatHour(hour)}
                         </div>
                         {dayAbrevs.map((day) => (
@@ -132,7 +127,6 @@ const WeeklyView = ({ members, selectedDate }) => {
 
                 {/* Events */} 
                 <div className="absolute inset-0 grid grid-cols-[60px_repeat(7, 1fr)]" style={{ height: 24 * 50 }}>
-
                        {generateWeekDays(new Date(selectedDate)).map((day, index) => {
                         const dateKey = format(day, "yyyy-MM-dd");
                         const dayEvents = allEvents.filter(e => e.date === dateKey);
@@ -149,11 +143,11 @@ const WeeklyView = ({ members, selectedDate }) => {
                                          
                                         <div
                                             key={i}
-                                            className="right-1 left-1 pt-3 absolute text-center rounded-md text-black text-s px-1 opacity-70"
+                                            className="right-1 left-1 absolute text-center pt-2 rounded-md text-black text-s opacity-70"
                                             style={{ top, height, backgroundColor: event.color }}
                                         >
+                                            {event.member}
                                             <div className="font-semibold">{event.title}</div>
-                                            <div className="opacity-80">{event.member}</div>
                                         </div>
                                     )
                                 })}

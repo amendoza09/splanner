@@ -28,6 +28,7 @@ class Event(Base):
     title = Column(String, nullable=False)
     start_time = Column(DateTime)
     end_time = Column(DateTime)
+    notes = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("members.id"), nullable=False)
     
     user = relationship("User", back_populates="events")
