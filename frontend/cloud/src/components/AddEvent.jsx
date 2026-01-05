@@ -7,35 +7,39 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
     const [endTime, setEndTime] = useState(new Date());
     const [selectedMember, setSelectedMember] = useState(null);
     const [notes, setNotes] = useState("");
+    const [isTask, setIsTask] = useState(false);
+    const [taskStartDate, setTaskStartDate] = useState("");
+    const [taskEndDate, setTaskEndDate] = useState("");
 
     if(!isOpen) return null;
 
-    const handleSubmit = async() => {
-        if(!title || !startTime || !endTime || !selectedMember) {
-            alert("Please fill out all fields");
-            return;
-        }
+    const handleSubmit = async () => {
+      if (!title || !selectedMember) {
+        alert("Please fill out all fields");
+        return;
+      }
 
-        try {
-            await addEventToUser(selectedMember.user_id, {
-                title,
-                start_time: `${startTime}:00`,
-                end_time: `${endTime}:00`,
-                notes,
-            });
-            
-            onNewEvent?.();
-            onClose();
+      if (isTask && !taskStartDate) {
+        alert("Please select a date for the task");
+        return;
+      }
 
-            setTitle("");
-            setStartTime("");
-            setEndTime("");
-            setNotes("");
-            setSelectedMember(null);
-        } catch(e) {
-            alert("Failed to create event");
-        }
-    }
+      if (!isTask && (!startTime || !endTime)) {
+        alert("Please provide start and end times");
+        return;
+      }
+
+      await addEventToUser(selectedMember.user_id, {
+        title,
+        is_task: isTask,
+        start_time: isTask ? `${taskStartDate}T00:00:00` : `${startTime}:00`,
+        end_time: isTask ? `${taskEndDate}T23:59:59` : `${endTime}:00`,
+        notes,
+      });
+
+      onNewEvent?.();
+      onClose();
+    };
 
     return(
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -43,18 +47,18 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
           <div>
             <h2 className="text-lg font-bold mb-4">Create an event</h2>
             {members.map((member) => (
-                    <button 
-                        key={member.user_id}
-                         className={`px-3 py-2 w-[5rem] mx-5 mb-5 rounded-full text-white ${
-                            selectedMember?.user_id === member.user_id
-                            ? "ring-1 ring-gray-500 shadow-md"
-                            : ""
-                        }`}
+              <button 
+                    key={member.user_id}
+                    className={`px-3 py-2 w-[5rem] mx-5 mb-5 rounded-full text-white ${
+                      selectedMember?.user_id === member.user_id
+                        ? "ring-1 ring-gray-500 shadow-md"
+                        : ""
+                    }`}
                         style={{ backgroundColor: member.color }}
                         onClick={() => setSelectedMember(member)}
-                    >
-                        {member.name}
-                    </button>
+              >
+                {member.name}
+              </button>
             ))}
             <input
                 type="text"
@@ -62,18 +66,51 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
                 className="border border-gray-300 rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onChange={(e) => setTitle(e.target.value)}
             />
-            <input
-                type="datetime-local"
-                placeholder="start time"
-                className="border border-gray-300 rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={(e) => setStartTime(e.target.value)}
-            />
-            <input
-                type="datetime-local"
-                placeholder="end time"
-                className="border border-gray-300 rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={(e) => setEndTime(e.target.value)}
-            />
+            <div className="flex gap-2 mb-4 items-center">
+              <input
+                type="checkbox"
+                checked={isTask}
+                onChange={(e) => setIsTask(e.target.checked)}
+                className="h-4 w-4 accent-black"
+              />
+              <label className="select-none">Task</label>
+            </div>
+
+            {/* TASK DATE */}
+            {isTask && (
+              <>
+              <input
+                type="date"
+                className="border rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={taskStartDate}
+                onChange={(e) => setTaskStartDate(e.target.value)}
+              />
+              <input
+                type="date"
+                className="border rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={taskEndDate}
+                onChange={(e) => setTaskEndDate(e.target.value)}
+              />
+              </>
+            )}
+
+            {/* EVENT TIMES */}
+            {!isTask && (
+              <>
+                <input
+                  type="datetime-local"
+                  className="border rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+                <input
+                  type="datetime-local"
+                  className="border rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </>
+            )}
             <input
                 type="text"
                 placeholder="Notes"

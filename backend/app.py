@@ -6,7 +6,8 @@ from models import Group
 from models import User
 from models import Event
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta, time
+from typing import Optional
 
 import string
 import random
@@ -51,6 +52,8 @@ def group(group_code: str, db: Session = Depends(get_db)):
                         "title": event.title,
                         "start_time": event.start_time,
                         "end_time": event.end_time,
+                        "notes": event.notes,
+                        "is_task": event.is_task
                     }
                     for event in user.events
                 ]
@@ -114,6 +117,7 @@ class EventCreate(BaseModel):
     title: str
     start_time: datetime | None = None
     end_time: datetime | None = None
+    is_task: bool = False
     notes: str | None = None
 
 @app.post("/members/{user_id}/events")
@@ -122,25 +126,74 @@ def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="user not found")
     
-    new_event = Event(
-        title=event.title, 
-        start_time=event.start_time,
-        end_time=event.end_time,
-        notes=event.notes,
-        user_id=user.id
-    )
-    db.add(new_event)
-    db.commit()
-    db.refresh(new_event)
+    created_events=[]
+    start = event.start_time
+    end = event.end_time
+    current_day = start.date()
+    last_day = end.date()
+    
+    while current_day <= last_day:
+        if current_day == start.date():
+            day_start = start if not event.is_task else datetime.combine(current_day, time.min)
+        else:
+            day_start = datetime.combine(current_day, time.min)
+        
+        if current_day == end.date():
+            day_end = end if not event.is_task else datetime.combine(current_day, time.max)
+        else:
+            day_end = datetime.combine(current_day, time.max)
 
-    return {
-        "event_id": new_event.id,
-        "title": new_event.title,
-        "start_time": new_event.start_time,
-        "end_time": new_event.end_time,
-        "notes": new_event.notes,
-        "user_id": new_event.user_id
-    }
+        new_event = Event(
+            title=event.title,
+            start_time=day_start,
+            end_time=day_end,
+            notes=event.notes,
+            user_id=user.id,
+            is_task=event.is_task
+        )
+        db.add(new_event)
+        created_events.append(new_event)
+
+        current_day += timedelta(days=1)
+
+    db.commit()
+
+    # Refresh all new events
+    for e in created_events:
+        db.refresh(e)
+
+    return [
+        {
+            "event_id": e.id,
+            "title": e.title,
+            "start_time": e.start_time,
+            "end_time": e.end_time,
+            "notes": e.notes,
+            "user_id": e.user_id,
+            "is_task": e.is_task
+        }
+        for e in created_events
+    ]
+
+# remove an event
+@app.delete("/members/{user_id}/events/{event_id}")
+def delete_user(user_id: int, event_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+    
+    event = (
+        db.query(Event)
+        .filter(Event.id == event_id, Event.user_id == user_id)
+        .first()
+    )
+    if not event:
+        raise HTTPException(status_code=404, detail="event not found")
+    
+    db.delete(event)
+    db.commit()
+    return("event deleted")
 
 # add user to group
 class AddUserRequest(BaseModel):
@@ -168,3 +221,40 @@ def add_user(group_code: str, payload: AddUserRequest, db: Session = Depends(get
 # delete user from group
 
 # edit user
+class UpdateUser(BaseModel):
+        name: Optional[str] = None
+        color: Optional[str] = None
+    
+@app.patch("/group/code/{group_code}/members/{user_id}")
+def update_user(
+    group_code: str,
+    user_id: int,
+    payload: UpdateUser,
+    db: Session = Depends(get_db)
+):
+    group = db.query(Group).filter(Group.code == group_code).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    user = (
+        db.query(User)
+        .filter(User.id == user_id, User.group_id == group.id)
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found in this group")
+
+    
+    update_data = payload.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "user_id": user.id,
+        "name": user.name,
+        "color": user.color,
+        "group_id": user.group_id
+    }

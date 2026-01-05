@@ -5,11 +5,16 @@ import { IoAddCircle } from "react-icons/io5";
 import WeeklyView from "./Weekly"
 import MonthlyView from "./Monthly"
 import AddEvent from './AddEvent'
+import EventCard from "./EventCard";
 
-const Calendar = ({ members, onNewEvent}) => {
+const Calendar = ({ members, onNewEvent, onDeleteEvent}) => {
     const [view, setView] = useState("week");
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [addEventOpen, setAddEventOpen] = useState(false);
+    const [eventOpen, setEventOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+
+
 
     return(
         <div className="flex flex-col w-[calc(100vw-8rem)] h-screen">
@@ -32,8 +37,21 @@ const Calendar = ({ members, onNewEvent}) => {
                 </button>
             </div>
             <div className="flex-1">
-                   {view === "week" && <WeeklyView members={members} selectedDate={selectedDate}/>}
-                   {view === "month" && <MonthlyView members={members} onDayPress={(day) => { setView("week"); setSelectedDate(day); }}/>}
+                   {view === "week" && 
+                        <WeeklyView 
+                            members={members} 
+                            selectedDate={selectedDate} 
+                            onSelectedEvent={setSelectedEvent} 
+                            onEventOpen={setEventOpen}
+                            onDeleteEvent={onDeleteEvent}
+                        />
+                    }
+                   {view === "month" && 
+                        <MonthlyView 
+                            members={members} 
+                            onDayPress={(day) => { setView("week"); setSelectedDate(day); }}
+                        />
+                    }
             </div>
             <button
                 onClick={() => setAddEventOpen(true)}
@@ -47,6 +65,14 @@ const Calendar = ({ members, onNewEvent}) => {
                         onClose={() => setAddEventOpen(false)}
                         members={members}
                         onNewEvent={onNewEvent}
+                    />
+            </div>
+            <div>
+                    <EventCard 
+                        isOpen={eventOpen}
+                        onClose={() => setEventOpen(false)}
+                        event={selectedEvent}
+                        onDelete={onDeleteEvent}
                     />
             </div>
 

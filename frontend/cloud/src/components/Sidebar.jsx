@@ -5,11 +5,11 @@ import AddMember from "./AddMember";
 import Member from './Member';
 import Settings from "./Settings";
 
-const Sidebar = ({ members, groupCode, onNewMember, onLogout }) => {
+const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [memberOpen, setMemberOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [selectedMember, setSelectedMember] = useState(null);
+    const [selectedMember, setSelectedMember] = useState("");
 
     const handleAddMember = async (member) => {
         try {
@@ -55,7 +55,9 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout }) => {
             <Member 
                 isOpen={memberOpen}
                 onClose={() => setMemberOpen(false)}
+                groupCode={groupCode}
                 member={selectedMember}
+                onUpdate={onUpdate}
             />
             <Settings 
                 isOpen={settingsOpen}

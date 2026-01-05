@@ -33,6 +33,7 @@ function App() {
     try{
       setLoadingJoin(true);
       await enterGroup(code);
+      
     }catch (e) {
       alert("Invalid group code", e);
     } finally {
@@ -53,21 +54,16 @@ function App() {
     }
   }
 
-  const getNewMembers = async () => {
+  const refresh = async () => {
     try{
-      const data = await getMembers(groupCode);
-      setMembers(data.users);
+      const data = await getGroupByCode(groupCode);
+      const normalizedMembers = data.users.map(user => ({
+        ...user,
+        events: user.events ?? []
+      }));
+      setMembers(normalizedMembers);
     } catch(e) {
-      alert("failed to get members");
-    }
-  };
-
-  const getNewEvents = async() => {
-    try {
-      const data = await getMembers(groupCode);
-      setMembers(data.users);
-    }catch(e) {
-      alert("failed to get any new events");
+      alert("Failed to refresh")
     }
   }
 
@@ -88,9 +84,16 @@ function App() {
   }
 
   return (
-    <div className="flex flex-row w-screen">
-        <Sidebar members={members} groupCode={groupCode} onNewMember={getNewMembers} onLogout={handleLogout}/>
-        <Calendar members={members} onNewEvent={getNewEvents} />
+    <div className="flex flex-row w-screen overflow-hidden inset-0 fixed">
+        <Sidebar 
+          members={members} 
+          groupCode={groupCode} 
+          onNewMember={refresh} 
+          onLogout={handleLogout}
+          onUpdate={refresh}
+          
+        />
+        <Calendar members={members} onNewEvent={refresh} onDeleteEvent={refresh} />
     </div>
   );
 }

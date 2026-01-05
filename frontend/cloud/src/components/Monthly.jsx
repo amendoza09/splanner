@@ -158,7 +158,7 @@ const MonthlyView = ({ members, onDayPress }) => {
                 </span>
 
                 {/* events */}
-                  <div className="flex flex-col mt-8 px-1 gap-1">
+                <div className="flex flex-col mt-8 px-1 gap-1">
                     {eventsByDate[formatDate]?.map((event, j) => (
                       <div 
                         key={j} 
@@ -166,11 +166,12 @@ const MonthlyView = ({ members, onDayPress }) => {
                         style={{ backgroundColor: event.memberColor, color: 'white' }}
                       >
                         <button onClick={() => openEvent(event)}>
-                          {event.title} ({formatTime(event.start_time, event.end_time)})
+                          {event.title}
+                          {!event.is_task && ` (${formatTime(event.start_time, event.end_time)})`}
                         </button>
                       </div>
                     ))}
-                  </div>
+                </div>
             </div>
           )
         })}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -28,7 +28,8 @@ class Event(Base):
     title = Column(String, nullable=False)
     start_time = Column(DateTime)
     end_time = Column(DateTime)
-    notes = Column(String, nullable=False)
+    notes = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("members.id"), nullable=False)
-    
+    is_task = Column(Boolean, default = False, nullable=False)
+
     user = relationship("User", back_populates="events")

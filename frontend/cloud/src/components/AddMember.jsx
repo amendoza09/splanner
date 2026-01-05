@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { addUserToGroup } from "../api";
 
 const AddMember = ({ isOpen, onClose, onAdd }) => {
     const [name, setName] = useState("");
