@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
@@ -8,15 +9,22 @@ from models import Event
 from pydantic import BaseModel
 from datetime import datetime, timedelta, time
 from typing import Optional
+from dotenv import load_dotenv
 
 import string
 import random
+
+API_URL = os.getenv("API_URL")
+load_dotenv()
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        API_URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
