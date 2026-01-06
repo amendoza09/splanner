@@ -90,7 +90,7 @@ def create_group(db: Session = Depends(get_db)):
     return {"group_id": new_group.id, "group_code": new_group.code}
 
 # get users from specific group
-@app.get("/group/code/{group_code}/members")
+@app.get("/group/{group_code}/members")
 def get_group_members(group_code: str, db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.code == group_code).first()
 
@@ -177,7 +177,7 @@ def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
 
 # remove an event
 @app.delete("/members/{user_id}/events/{event_id}")
-def delete_user(user_id: int, event_id: int, db: Session = Depends(get_db)):
+def delete_event(user_id: int, event_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user:
@@ -195,12 +195,66 @@ def delete_user(user_id: int, event_id: int, db: Session = Depends(get_db)):
     db.commit()
     return("event deleted")
 
+# remove a user
+@app.delete("/members/{user_id}")
+def delete_member(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    db.delete(user)
+    db.commit()
+    return("user deleted")
+
+# update an event
+class UpdateEvent(BaseModel):
+    title: Optional[str] = None
+    start_time: Optional[datetime] | None = None
+    end_time: Optional[datetime] | None = None
+    is_task: Optional[bool]
+    notes: Optional[str] | None = None
+    user_id: Optional[int] | None = None
+    
+@app.patch("/members/{user_id}/events/{event_id}")
+def update_event(
+        user_id: int,
+        event_id: str,
+        payload: UpdateEvent,
+        db: Session = Depends(get_db)
+    ):
+    user = (db.query(User).filter(User.id == user_id).first())
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found group")
+    
+    event = db.query(Event).filter(Event.id == event_id, Event.user_id == user_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="event not found")
+    
+    update_data = payload.dict(exclude_unset=True)
+        
+    for key, value in update_data.items():
+        setattr(event, key, value)
+
+    db.commit()
+    db.refresh(event)
+
+    return {
+        "user_id": user_id,
+        "event_id": event.id,
+        "title": event.title,
+        "start_time": event.start_time,
+        "end_time": event.end_time,
+        "notes": event.notes,
+        "is_task": event.is_task
+    }
+
 # add user to group
 class AddUserRequest(BaseModel):
     name: str
     color: str
     
-@app.post("/group/code/{group_code}/members")
+@app.post("/group/{group_code}/members")
 def add_user(group_code: str, payload: AddUserRequest, db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.code == group_code).first()
     if not group:
@@ -218,14 +272,12 @@ def add_user(group_code: str, payload: AddUserRequest, db: Session = Depends(get
         "group_id": new_user.group_id
     }
     
-# delete user from group
-
 # edit user
 class UpdateUser(BaseModel):
         name: Optional[str] = None
         color: Optional[str] = None
     
-@app.patch("/group/code/{group_code}/members/{user_id}")
+@app.patch("/group/{group_code}/members/{user_id}")
 def update_user(
     group_code: str,
     user_id: int,

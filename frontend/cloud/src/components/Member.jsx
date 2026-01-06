@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { FaRegEdit } from "react-icons/fa";
-import { updateUser } from "../api";
+import { updateUser, deleteUser } from "../api";
 
-const Member = ({ isOpen, onClose, groupCode, member, onUpdate }) => {
+const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(member.name);
   const [color, setColor] = useState(member.color);
@@ -22,11 +22,20 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate }) => {
   
   const saveChanges = async() => {
     try {
-      const res = await updateUser(groupCode, member.user_id, { name, color })
+      await updateUser(groupCode, member.user_id, { name, color })
       onUpdate()
       setIsEditing(false)
     } catch (e) {
       alert("Could not update user")
+    }
+  }
+  const deleteAUser = async() => {
+    try {
+      const data = await deleteUser(member.user_id);
+      onUserDelete();
+      setIsEditing(false);
+    } catch (e) {
+      alert("Could not delete user")
     }
   }
 
@@ -63,6 +72,9 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate }) => {
               <FaRegEdit size={24} className="opacity-60" onClick={() => openEdit()}/>
             ): (
               <>
+                <button className="px-4 py-2 text-red-600 rounded" onClick={deleteAUser}>
+                  remove
+                </button>
                 <button className="px-4 py-2 rounded bg-gray-200" onClick={cancelEdit}>
                   cancel
                 </button>

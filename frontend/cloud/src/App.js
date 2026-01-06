@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
 
-import { getGroupByCode, createGroup, getMembers } from './api';
+import { getGroupByCode, createGroup} from './api';
 
 function App() {
   const [members, setMembers] = useState([]);
@@ -54,18 +54,13 @@ function App() {
     }
   }
 
-  const refresh = async () => {
-    try{
-      const data = await getGroupByCode(groupCode);
-      const normalizedMembers = data.users.map(user => ({
-        ...user,
-        events: user.events ?? []
-      }));
-      setMembers(normalizedMembers);
-    } catch(e) {
-      alert("Failed to refresh")
-    }
-  }
+  const refresh = useCallback(async () => {
+    if (!groupCode) return;
+    const data = await getGroupByCode(groupCode);
+    setMembers(
+      data.users.map(u => ({ ...u, events: u.events ?? [] }))
+    );
+  }, [groupCode]);
 
   useEffect(() => {
     const savedCode = localStorage.getItem("groupCode");
@@ -91,9 +86,9 @@ function App() {
           onNewMember={refresh} 
           onLogout={handleLogout}
           onUpdate={refresh}
-          
+          onUserDelete={refresh}
         />
-        <Calendar members={members} onNewEvent={refresh} onDeleteEvent={refresh} />
+        <Calendar members={members} onNewEvent={refresh} onDeleteEvent={refresh} onUpdate={refresh} />
     </div>
   );
 }

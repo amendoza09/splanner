@@ -7,14 +7,12 @@ import MonthlyView from "./Monthly"
 import AddEvent from './AddEvent'
 import EventCard from "./EventCard";
 
-const Calendar = ({ members, onNewEvent, onDeleteEvent}) => {
+const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate}) => {
     const [view, setView] = useState("week");
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [addEventOpen, setAddEventOpen] = useState(false);
     const [eventOpen, setEventOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
-
-
 
     return(
         <div className="flex flex-col w-[calc(100vw-8rem)] h-screen">
@@ -73,6 +71,8 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent}) => {
                         onClose={() => setEventOpen(false)}
                         event={selectedEvent}
                         onDelete={onDeleteEvent}
+                        onUpdate={onUpdate}
+                        members={members}
                     />
             </div>
 
