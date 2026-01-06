@@ -83,12 +83,17 @@ function App() {
         <Sidebar 
           members={members} 
           groupCode={groupCode} 
-          onNewMember={refresh} 
           onLogout={handleLogout}
+          onNewMember={refresh} 
           onUpdate={refresh}
           onUserDelete={refresh}
         />
-        <Calendar members={members} onNewEvent={refresh} onDeleteEvent={refresh} onUpdate={refresh} />
+        <Calendar 
+          members={members} 
+          onNewEvent={refresh} 
+          onDeleteEvent={refresh} 
+          onUpdate={refresh} 
+        />
     </div>
   );
 }
