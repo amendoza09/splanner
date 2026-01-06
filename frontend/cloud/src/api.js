@@ -1,8 +1,7 @@
-import axios from 'axios';
-import API_URL from dont_env;
+import axios from "axios";
 
 const API = axios.create({
-  baseURL: {API_URL},
+  baseURL: "REMOVED",
 });
 
 export const getGroupByCode = async (groupCode) => {
