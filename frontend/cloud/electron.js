@@ -4,7 +4,8 @@ const path = require("path");
 function createWindow() {
   const win = new BrowserWindow({
     fullscreen: true,
-    autoHideMenuBar: true
+    autoHideMenuBar: true,
+    kiosk: true,
   });
 
   // DEV vs PROD
