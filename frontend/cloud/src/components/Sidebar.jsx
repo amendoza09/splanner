@@ -22,7 +22,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
     };
     
     return(
-        <div className="h-screen md:w-[8rem] border border-1 py-8 md:px-5 flex flex-col">
+        <div className="h-screen md:w-[8rem] border border-1 py-8 px-2 md:px-5 flex flex-col">
             <div className="w-full flex flex-col items-start gap-5 sm:items-start">
                 {members.map((member) => (
                     <button 
@@ -34,7 +34,13 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
                             setSelectedMember(member)
                         }}
                     >
-                        {member.name}
+                        <span className="hidden sm:block">
+                            {member.name}
+                        </span>
+                        <span className="sm:hidden block">
+                            {member.name[0]}
+                        </span>
+                        
                     </button>
                 ))}
                 <button onClick={()=> setIsAddOpen(true)}>+</button>

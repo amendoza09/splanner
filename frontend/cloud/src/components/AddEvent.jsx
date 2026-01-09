@@ -43,7 +43,7 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
 
     return(
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-[500px] relative justify-center flex flex-col">
+        <div className="bg-white rounded-lg p-6 w-[380px] md:w-[500px] relative justify-center flex flex-col">
           <div>
             <h2 className="text-lg font-bold mb-4">Create an event</h2>
             {members.map((member) => (

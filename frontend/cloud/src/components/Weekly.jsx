@@ -224,22 +224,22 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
 
                                 return (
                                     <div
-                                    key={event.event_id}
-                                    onClick={() => {
-                                        onEventOpen(true);
-                                        onSelectedEvent(event);
-                                    }}
-                                    className="absolute left-1 right-1 rounded-md text-xs md:text-s text-black text-center pt-3 opacity-80"
-                                    style={{
-                                        top,
-                                        height,
-                                        backgroundColor: event.color,
-                                    }}
+                                        key={event.event_id}
+                                        onClick={() => {
+                                            onEventOpen(true);
+                                            onSelectedEvent(event);
+                                        }}
+                                        className="absolute left-1 right-1 rounded-md text-xs md:text-s text-black text-center pt-3 opacity-80"
+                                        style={{
+                                            top,
+                                            height,
+                                            backgroundColor: event.color,
+                                        }}
                                     >
                                         <div className="font-semibold text-center">
                                             {event.title}
                                         </div>
-                                        <span className="hidden md:block">
+                                        <span className="sm:hidden block">
                                             {event.member[0]}
                                         </span>
                                         <span className="hidden sm:block">
