@@ -16,6 +16,7 @@ import random
 
 load_dotenv()
 API_URL = os.getenv("API_URL")
+HOST_URL = os.getenv("HOST_URL")
 
 app = FastAPI()
 
@@ -23,7 +24,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        API_URL
+        API_URL,
+        HOST_URL
     ],
     allow_credentials=True,
     allow_methods=["*"],
