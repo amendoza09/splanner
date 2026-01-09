@@ -113,9 +113,9 @@ const MonthlyView = ({ members, onDayPress }) => {
   };
 
   return (
-    <div className="flex flex-col w-[calc(100vw-8rem)] h-[90vh]">
+    <div className="flex flex-col w-[calc(100vw-3rem)] md:w-[calc(100vw-8rem)] h-[90vh]">
       {/* Agenda Header */}
-      <div className="flex flex-row justify-between px-10 pb-[30px] pt-[10px] items-center">
+      <div className="flex flex-row justify-center md:justify-between px-10 pb-2 md:pb-[30px] md:pt-[10px] items-center">
         <button className="px-20" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
           <p>{'<'}</p>
         </button>
@@ -162,12 +162,14 @@ const MonthlyView = ({ members, onDayPress }) => {
                     {eventsByDate[formatDate]?.map((event, j) => (
                       <div 
                         key={j} 
-                        className="text-xs bg-gray-200 rounded truncate h-8 items-center flex justify-center"
-                        style={{ backgroundColor: event.memberColor, color: 'white' }}
+                        className="text-xs rounded truncate h-8 items-center flex justify-center"
+                        style={{ backgroundColor: event.memberColor, color: 'black' }}
                       >
                         <button onClick={() => openEvent(event)}>
                           {event.title}
-                          {!event.is_task && ` (${formatTime(event.start_time, event.end_time)})`}
+                          <span className="hidden sm:block">
+                            {!event.is_task && ` (${formatTime(event.start_time, event.end_time)})`}
+                          </span>
                         </button>
                       </div>
                     ))}

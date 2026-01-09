@@ -177,7 +177,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
             </div>
             
             {/* Time grid */}
-            <div className="flex-1 overflow-y-auto relative px-2 no-scrollbar">
+            <div className="flex-1 overflow-y-auto relative md:px-2 no-scrollbar">
 
                 {/* Shared height wrapper */}
                 <div
@@ -192,7 +192,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         className="grid grid-cols-[60px_repeat(7,1fr)] items-center"
                         style={{ height: HOUR_HEIGHT }}
                     >
-                        <div className="text-gray-500 text-xs text-right pr-4">
+                        <div className="text-gray-500 md:text-xs text-[12px] text-center ">
                         {formatHour(hour)}
                         </div>
                         {dayAbrevs.map((day) => (
@@ -229,7 +229,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                         onEventOpen(true);
                                         onSelectedEvent(event);
                                     }}
-                                    className="absolute left-1 right-1 rounded-md p-1 text-s text-black text-center pt-3 opacity-80"
+                                    className="absolute left-1 right-1 rounded-md text-xs md:text-s text-black text-center pt-3 opacity-80"
                                     style={{
                                         top,
                                         height,
@@ -239,7 +239,13 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                         <div className="font-semibold text-center">
                                             {event.title}
                                         </div>
-                                        {event.member}
+                                        <span className="hidden md:block">
+                                            {event.member[0]}
+                                        </span>
+                                        <span className="hidden sm:block">
+                                            {event.member}
+                                        </span>
+                                        
                                     </div>
                                 );
                                 })}

@@ -57,5 +57,10 @@ export const deleteEvent = async(user_id, event_id) => {
 
 export const updateEvent = async(userID, eventID, updatedPayload) => {
   const res = await API.patch(`/members/${userID}/events/${eventID}`, updatedPayload)
-  return res.data
+  return res.data;
+}
+
+export const getWeather = async() => {
+  const res = await API.get('https://api.weather.gov/gridpoints/GSP/35,80/forecast?units=us')
+  return res.data;
 }

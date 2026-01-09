@@ -22,12 +22,12 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
     };
     
     return(
-        <div className="h-screen w-[8rem] border border-1 py-8 px-5 flex flex-col">
-            <div className="w-full flex flex-col items-start gap-5">
+        <div className="h-screen md:w-[8rem] border border-1 py-8 md:px-5 flex flex-col">
+            <div className="w-full flex flex-col items-start gap-5 sm:items-start">
                 {members.map((member) => (
                     <button 
                         key={member.user_id}
-                        className={`px-1 py-2 rounded-full w-full text-white`}
+                        className={`px-1 py-2 sm:text-xs md:text-lg rounded-full w-full text-white whitespace-nowrap`}
                         style={{ backgroundColor: member.color }}
                         onClick={() =>{
                             setMemberOpen(true)
