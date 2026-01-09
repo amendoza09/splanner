@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 import string
 import random
 
-API_URL = os.getenv("API_URL")
 load_dotenv()
+API_URL = os.getenv("API_URL")
 
 app = FastAPI()
 
