@@ -16,6 +16,8 @@
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
     "react-scripts": "5.0.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -41,12 +43,16 @@
       "buildResources": "assets"
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "category": "public.app-category.utilities",
       "icon": "assets/icon.icns"
     },
     "linux": {
-      "target": ["deb"],
+      "target": [
+        "deb"
+      ],
       "category": "Utility",
       "icon": "assets/icon.png"
     },
@@ -55,7 +61,6 @@
       "icon": "assets/icon.ico"
     }
   },
-
   "eslintConfig": {
     "extends": [
       "react-app",

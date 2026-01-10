@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
+import { io } from "socket.io-client"; 
 
 import { getGroupByCode, createGroup} from './api';
+
+const socket = io(import.meta.env.API_URL);
 
 function App() {
   const [members, setMembers] = useState([]);
@@ -66,6 +69,19 @@ function App() {
     const savedCode = localStorage.getItem("groupCode");
     if(savedCode) enterGroup(savedCode);
   }, []);
+  useEffect(() => {
+    if(!groupCode) return;
+
+    socket.emit("Join-group",groupCode);
+    socket.on("group-updated", () => {
+      refresh();
+    })
+
+    return () => {
+      socket.off("group-updated");
+      socket.emit("leave-group");
+    }
+  })
 
   if(!groupCode) {
     return (

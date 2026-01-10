@@ -28,7 +28,7 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate}) => {
         const data = await getWeather()
         const currentHour = data.properties.periods[0]
 
-        if (currentHour.probabilityOfPrecipitation?.value >= 55) {
+        if (currentHour.probabilityOfPrecipitation?.value >= 60) {
             setWeatherIcon(rainIcon);
         } else if(currentHour.relativeHumidity?.value >= 60){
             setWeatherIcon(cloudyIcon);
