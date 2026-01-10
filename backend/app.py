@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta, time
 from typing import Optional
 from dotenv import load_dotenv
+import socketio
 
 import string
 import random
@@ -18,19 +19,34 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 HOST_URL = os.getenv("HOST_URL")
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+sio = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins=[
         "http://localhost:3000",
         API_URL,
-        HOST_URL
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+        HOST_URL,
+    ]
 )
+
+app = FastAPI()
+socket_app = socketio.ASGIApp(sio, app)
+
+@sio.event
+async def connect(sid, environ):
+    print("Socket connected:", sid)
+
+@sio.event
+async def disconnect(sid):
+    print("Socket disconnected:", sid)
+
+@sio.event
+async def join_group(sid, group_code):
+    await sio.enter_room(sid, group_code)
+
+@sio.event
+async def leave_group(sid, group_code):
+    await sio.leave_room(sid, group_code)
+
 @app.get("/")
 def read_root( db:Session = Depends(get_db)):
     return {"Status": "connected"}
