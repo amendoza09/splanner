@@ -69,19 +69,18 @@ function App() {
     const savedCode = localStorage.getItem("groupCode");
     if(savedCode) enterGroup(savedCode);
   }, []);
+
   useEffect(() => {
     if(!groupCode) return;
 
-    socket.emit("Join-group",groupCode);
-    socket.on("group-updated", () => {
-      refresh();
-    })
+    socket.emit("join-group",groupCode);
+    socket.on("group-updated", refresh)
 
     return () => {
-      socket.off("group-updated");
-      socket.emit("leave-group");
+      socket.off("group-updated", refresh);
+      socket.emit("leave-group", groupCode);
     }
-  })
+  }, [groupCode, refresh])
 
   if(!groupCode) {
     return (
