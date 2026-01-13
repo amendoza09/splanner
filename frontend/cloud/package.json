@@ -53,6 +53,9 @@
       "target": [
         "deb"
       ],
+      "arch": [
+        "arm64", "arm7l"
+      ],
       "category": "Utility",
       "icon": "assets/icon.png"
     },
