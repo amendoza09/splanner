@@ -54,7 +54,7 @@
         "deb"
       ],
       "arch": [
-        "arm64", "arm7l"
+        "arm64", "armv7l"
       ],
       "category": "Utility",
       "icon": "assets/icon.png"
