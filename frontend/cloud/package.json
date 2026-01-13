@@ -50,9 +50,7 @@
       "icon": "assets/icon.icns"
     },
     "linux": {
-      "target": [
-        "deb"
-      ],
+      "target": ["AppImage", "deb"],
       "arch": [
         "arm64", "armv7l"
       ],
