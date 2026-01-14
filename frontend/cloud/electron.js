@@ -1,6 +1,9 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 
+app.commandLine.appendSwitch("enable-touch-events");
+app.commandLine.appendSwitch("touch-events", "enabled");
+
 const gotTheLock = app.requestSingleInstanceLock();
 if(!gotTheLock) {
   app.quit();
