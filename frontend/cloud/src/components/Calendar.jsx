@@ -73,7 +73,7 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh}) =>
                 </div>
                 
                 <div className=" absolute right-0 lg:right-10 p-5 items-center flex">
-                    <button onClick={() => onRefresh} className="mr-4">
+                    <button type="button" onClick={onRefresh} className="mr-4">
                         <IoMdRefresh />
                     </button>
                     <p className="text-gray-500">{temp}</p>
