@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { TbCalendarMonthFilled } from "react-icons/tb";
 import { MdCalendarViewWeek } from "react-icons/md";
 import { IoAddCircle } from "react-icons/io5";
+import { IoMdRefresh } from "react-icons/io";
 
 import { getWeather } from "../api";
 
@@ -15,7 +16,7 @@ import nightIcon from '../assets/night.png';
 import rainIcon from '../assets/rainy.png';
 import cloudyIcon from '../assets/icon.png';
 
-const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate}) => {
+const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh}) => {
     const [view, setView] = useState("week");
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [addEventOpen, setAddEventOpen] = useState(false);
@@ -72,6 +73,9 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate}) => {
                 </div>
                 
                 <div className=" absolute right-0 lg:right-10 p-5 items-center flex">
+                    <button onClick={() => onRefresh} className="mr-4">
+                        <IoMdRefresh />
+                    </button>
                     <p className="text-gray-500">{temp}</p>
                     <img className="w-5 h-5 mx-2 opacity-50" src={weatherIcon}/>
                 </div>

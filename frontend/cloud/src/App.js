@@ -107,7 +107,8 @@ function App() {
           members={members} 
           onNewEvent={refresh} 
           onDeleteEvent={refresh} 
-          onUpdate={refresh} 
+          onUpdate={refresh}
+          onRefresh={refresh}
         />
     </div>
   );
