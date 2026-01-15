@@ -112,10 +112,10 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
         <div className="h-[92vh] flex flex-col overflow-hidden">
             {/* Days of the week */}
             <div className="sticky top-0 z-20 ">
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center px-2 border-b border-black-500">
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center border-b border-black-500">
                     <div />
                     {dayAbrevs.map((day, index) => (
-                        <div key={index} className="h-[50px] flex items-center justify-center font-medium">
+                        <div key={index} className="h-[25px] flex items-center justify-center font-medium">
                             <p>{day}</p>
                         </div>
                     ))}
@@ -125,7 +125,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                     <div />
                     {generateWeekDays(selectedDate ? new Date(selectedDate) : new Date()).map(
                         (item, i) => {
-                        if (!item) return <div key={i} className="h-[50px]" />;
+                        if (!item) return <div key={i} className="h-[30px]" />;
 
                         const formatDate = format(item, "yyyy-MM-dd");
                         const isSelected = selectedDate === formatDate;
@@ -142,7 +142,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             {/* Day button */}
                             <button
                                 onClick={() => handleDayPress(item)}
-                                className="h-[50px] w-full flex items-center justify-center"
+                                className="h-[30px] w-full flex items-center justify-center"
                             >
                                 <span
                                 className={`w-8 h-8 items-center flex justify-center ${
@@ -177,7 +177,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
             </div>
             
             {/* Time grid */}
-            <div className="flex-1 overflow-y-auto relative md:px-2 no-scrollbar">
+            <div className="flex-1 overflow-y-auto touch-pan-y overscroll-contain relative md:px-2 no-scrollbar ">
 
                 {/* Shared height wrapper */}
                 <div

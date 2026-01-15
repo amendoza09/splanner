@@ -53,7 +53,7 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh}) =>
     return(
         <div className="flex flex-col w-full h-screen">
             <div className="flex flex-1 justify-center w-full">
-                <div className="gap-5 md:gap-10 flex px-4 py-2">
+                <div className="gap-5 md:gap-10 flex px-4 pt-1">
                     <button 
                         onClick={() => setView("week")}
                         className={`p-2 rounded ${

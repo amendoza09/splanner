@@ -22,12 +22,12 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
     };
     
     return(
-        <div className="h-screen md:w-[8rem] border border-1 py-8 px-2 md:px-5 flex flex-col">
-            <div className="w-full flex flex-col items-start gap-5 sm:items-start">
+        <div className="h-screen md:w-[8rem] border border-1 py-8 px-2 flex flex-col">
+            <div className="w-full flex flex-col items-start gap-5">
                 {members.map((member) => (
                     <button 
                         key={member.user_id}
-                        className={`px-1 py-2 sm:text-xs md:text-lg rounded-full w-full text-white whitespace-nowrap`}
+                        className={`px-1 py-2 sm:text-xs md:text-lg rounded-full w-full whitespace-nowrap`}
                         style={{ backgroundColor: member.color }}
                         onClick={() =>{
                             setMemberOpen(true)
@@ -43,10 +43,10 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
                         
                     </button>
                 ))}
-                <button onClick={()=> setIsAddOpen(true)}>+</button>
+                <button className="px-3" onClick={()=> setIsAddOpen(true)}>+</button>
             </div>
             <div className="mt-[auto]">
-                <div className="justify-center flex my-5">
+                <div className="flex my-5">
                     <button onClick={()=> setSettingsOpen(true)}>
                         <IoSettingsOutline size={32} color="gray" />
                     </button>

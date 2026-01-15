@@ -115,7 +115,7 @@ const MonthlyView = ({ members, onDayPress }) => {
   return (
     <div className="flex flex-col w-[calc(100vw-3rem)] md:w-[calc(100vw-8rem)] h-[90vh]">
       {/* Agenda Header */}
-      <div className="flex flex-row justify-center md:justify-between px-10 pb-2 md:pb-[30px] md:pt-[10px] items-center">
+      <div className="flex flex-row justify-center md:justify-between px-10 items-center">
         <button className="px-20" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
           <p>{'<'}</p>
         </button>
@@ -153,7 +153,7 @@ const MonthlyView = ({ members, onDayPress }) => {
                 className={`h-full w-full relative cursor-pointer`}
                 onClick={() => onDayPress(item)}
               >
-                <span className={`h-6 w-6 absolute top-1 right-1 px-2 ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[var(--red)] rounded-xl' : ''}`}>
+                <span className={`h-6 w-6 absolute top-0 right-0  ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[var(--red)] rounded-xl' : ''}`}>
                   {format(item, 'd')}
                 </span>
 
@@ -167,7 +167,7 @@ const MonthlyView = ({ members, onDayPress }) => {
                       >
                         <button onClick={() => openEvent(event)}>
                           {event.title}
-                          <span className="hidden sm:block">
+                          <span className="hidden xl:block">
                             {!event.is_task && ` (${formatTime(event.start_time, event.end_time)})`}
                           </span>
                         </button>
