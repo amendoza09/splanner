@@ -13,7 +13,7 @@ function createWindow() {
   const win = new BrowserWindow({
     title: "Cloud",
     fullscreen: true,
-    // kiosk: true,               // ✅ real kiosk mode
+    kiosk: true,               // ✅ real kiosk mode
     frame: false,
     autoHideMenuBar: true,
     alwaysOnTop: true,
