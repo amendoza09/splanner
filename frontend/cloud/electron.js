@@ -16,7 +16,7 @@ function createWindow() {
     kiosk: true,               // ✅ real kiosk mode
     frame: false,
     autoHideMenuBar: true,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
