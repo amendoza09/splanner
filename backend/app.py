@@ -19,16 +19,17 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 HOST_URL = os.getenv("HOST_URL")
 
+app = FastAPI()
+
 sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins=[
-        "http://localhost:3000",
+        "*",
         API_URL,
         HOST_URL,
     ]
 )
 
-app = FastAPI()
 socket_app = socketio.ASGIApp(sio, app)
 
 @sio.event
