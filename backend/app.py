@@ -19,18 +19,16 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 HOST_URL = os.getenv("HOST_URL")
 
-app = FastAPI()
+fastAPI_app = FastAPI()
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins=[
-        "*",
-        API_URL,
-        HOST_URL,
-    ]
+    cors_allowed_origins="*"
 )
 
-socket_app = socketio.ASGIApp(sio, app)
+@fastapi_app.get("/")
+def health():
+    return {"status": "connected"}
 
 @sio.event
 async def connect(sid, environ):
@@ -43,14 +41,14 @@ async def disconnect(sid):
 @sio.event
 async def join_group(sid, group_code):
     await sio.enter_room(sid, group_code)
+    print(f"{sid} joined {group_code}")
 
 @sio.event
 async def leave_group(sid, group_code):
     await sio.leave_room(sid, group_code)
+    print(f"{sid} left {group_code}")
 
-@app.get("/")
-def read_root( db:Session = Depends(get_db)):
-    return {"Status": "connected"}
+app = socketio.ASGIApp(sio, fastapi_app)
 
 # get group
 @app.get("/group/{group_code}")
