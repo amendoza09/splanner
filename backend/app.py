@@ -28,9 +28,6 @@ app.add_middleware(
         API_URL,
         HOST_URL,
     ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 # get group
