@@ -95,6 +95,7 @@ function App() {
 
   return (
     <div className="flex flex-row w-screen overflow-hidden inset-0 fixed">
+      <span className="hidden sm:block">
         <Sidebar 
           members={members} 
           groupCode={groupCode} 
@@ -103,6 +104,8 @@ function App() {
           onUpdate={refresh}
           onUserDelete={refresh}
         />
+      </span>
+        
         <Calendar 
           members={members} 
           onNewEvent={refresh} 

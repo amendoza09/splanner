@@ -113,7 +113,7 @@ const MonthlyView = ({ members, onDayPress }) => {
   };
 
   return (
-    <div className="flex flex-col w-[calc(100vw-3rem)] md:w-[calc(100vw-8rem)] h-[90vh]">
+    <div className="flex flex-col h-[90vh]">
       {/* Agenda Header */}
       <div className="flex flex-row justify-center md:justify-between px-10 items-center">
         <button className="px-20" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>

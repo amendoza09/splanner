@@ -13,10 +13,10 @@ function createWindow() {
   const win = new BrowserWindow({
     title: "Cloud",
     fullscreen: true,
-    kiosk: true,               // ✅ real kiosk mode
+    kiosk: true,
     frame: false,
     autoHideMenuBar: true,
-    alwaysOnTop: false,
+    alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
