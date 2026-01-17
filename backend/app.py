@@ -19,36 +19,19 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 HOST_URL = os.getenv("HOST_URL")
 
-fastapi_app = FastAPI()
+app = FastAPI()
 
-sio = socketio.AsyncServer(
-    async_mode="asgi",
-    cors_allowed_origins="*"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        API_URL,
+        HOST_URL,
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
-@fastapi_app.get("/")
-def health():
-    return {"status": "connected"}
-
-@sio.event
-async def connect(sid, environ):
-    print("Socket connected:", sid)
-
-@sio.event
-async def disconnect(sid):
-    print("Socket disconnected:", sid)
-
-@sio.event
-async def join_group(sid, group_code):
-    await sio.enter_room(sid, group_code)
-    print(f"{sid} joined {group_code}")
-
-@sio.event
-async def leave_group(sid, group_code):
-    await sio.leave_room(sid, group_code)
-    print(f"{sid} left {group_code}")
-
-app = socketio.ASGIApp(sio, fastapi_app)
 
 # get group
 @app.get("/group/{group_code}")

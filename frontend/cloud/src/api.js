@@ -7,11 +7,6 @@ export const API = axios.create({
   baseURL: API_URL,
 });
 
-export const socket = io(API_URL, {
-  transports: ["websocket"],
-  autoConnect: false,
-});
-
 export const getGroupByCode = async (groupCode) => {
     try {
         const res = await API.get(`/group/${groupCode}`);
