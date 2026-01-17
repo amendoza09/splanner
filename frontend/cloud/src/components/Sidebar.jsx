@@ -46,7 +46,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
                 <button className="px-3" onClick={()=> setIsAddOpen(true)}>+</button>
             </div>
             <div className="mt-[auto]">
-                <div className="flex my-5">
+                <div className="flex my-5 justify-center">
                     <button onClick={()=> setSettingsOpen(true)}>
                         <IoSettingsOutline size={32} color="gray" />
                     </button>

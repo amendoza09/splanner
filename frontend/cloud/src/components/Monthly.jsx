@@ -150,15 +150,15 @@ const MonthlyView = ({ members, onDayPress }) => {
           return (
             <div
                 key = {formatDate}
-                className={`h-full w-full relative cursor-pointer`}
+                className={`w-full relative cursor-pointer`}
                 onClick={() => onDayPress(item)}
               >
-                <span className={`h-6 w-6 absolute top-0 right-0  ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[var(--red)] rounded-xl' : ''}`}>
+                <span className={`h-6 w-6 absolute text-center top-0 right-0  ${isSelected ? 'font-bold' : ''} ${isToday ? 'font-semibold bg-[var(--red)] rounded-xl' : ''}`}>
                   {format(item, 'd')}
                 </span>
 
                 {/* events */}
-                <div className="flex flex-col mt-8 px-1 gap-1">
+                <div className="flex flex-col mt-7 px-1 gap-1">
                     {eventsByDate[formatDate]?.map((event, j) => (
                       <div 
                         key={j} 
