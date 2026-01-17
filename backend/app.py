@@ -19,7 +19,7 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 HOST_URL = os.getenv("HOST_URL")
 
-fastAPI_app = FastAPI()
+fastapi_app = FastAPI()
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
