@@ -61,6 +61,6 @@ export const updateEvent = async(userID, eventID, updatedPayload) => {
 }
 
 export const getWeather = async() => {
-  const res = await axios.get('https://api.weather.gov/gridpoints/GSP/35,80/forecast?units=us')
+  const res = await axios.get('https://api.weather.gov/gridpoints/GSP/80,35/forecast/hourly?units=us')
   return res.data;
 }
