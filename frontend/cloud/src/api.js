@@ -1,7 +1,15 @@
 import axios from "axios";
+import { io } from "socket.io-client";
 
-const API = axios.create({
-  baseURL: "REMOVED",
+const API_URL = "REMOVED";
+
+export const API = axios.create({
+  baseURL: API_URL,
+});
+
+export const socket = io(API_URL, {
+  transports: ["websocket"],
+  autoConnect: false,
 });
 
 export const getGroupByCode = async (groupCode) => {
