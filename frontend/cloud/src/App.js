@@ -16,18 +16,31 @@ function App() {
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [status, setStatus] = useState(null);
 
-  const enterGroup = async(code) => {
-    const data = await getGroupByCode(code);
-    const normalizedMembers = data.users.map(user => ({
-      ...user,
-      events: user.events ?? []
-    }));
+  const enterGroup = async (code) => {
+    try {
+      const res = await getGroupByCode(code);
 
-    setGroupCode(code);
-    setMembers(normalizedMembers);
-    localStorage.setItem("groupCode", code);
-  }
+      if (!res || res.status !== 200) {
+        setStatus(404);
+        return;
+      }
+      const normalizedMembers = res.users.map(user => ({
+        ...user,
+        events: user.events ?? []
+      }));
+
+      setStatus(res.status);
+      setGroupCode(code);
+      setMembers(normalizedMembers);
+      localStorage.setItem("groupCode", code);
+
+    } catch (e) {
+      setStatus(404);
+      console.log("Group code does not exist");
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("groupCode");
@@ -39,7 +52,6 @@ function App() {
     try{
       setLoadingJoin(true);
       await enterGroup(code);
-      
     }catch (e) {
       alert("Invalid group code", e);
     } finally {
@@ -49,6 +61,7 @@ function App() {
 
   const handleCreateGroup = async () => {
     try {
+      setStatus(null);
       setLoadingCreate(true);
       const data = await createGroup();
 
@@ -92,6 +105,7 @@ function App() {
           onCreateGroup={handleCreateGroup}
           loadingJoin={loadingJoin}
           loadingCreate={loadingCreate}
+          statusCode={status}
         />
     )
   }

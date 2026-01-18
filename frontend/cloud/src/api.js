@@ -10,7 +10,11 @@ export const API = axios.create({
 export const getGroupByCode = async (groupCode) => {
     try {
         const res = await API.get(`/group/${groupCode}`);
-        return res.data;
+        
+        return{
+          status: res.status,
+          users: res.data.users
+        };
     } catch(err) {
         console.error("failed to fetch group:", err);
         return { users: [] };

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate}) => {
+const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, statusCode}) => {
   const [code, setCode] = useState("");
 
   return (
@@ -11,7 +11,7 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate})
           className="border border-gray-300 px-3 py-2 my-3 rounded-lg flex text-center"
           value={code}
           onChange={ (e) => setCode(e.target.value.toUpperCase())}
-          placeHolder="XXXXX"
+          placeholder="XXXXX"
         />
         <button
           onClick={() => onSubmit(code)}
@@ -20,6 +20,9 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate})
         >
           {loadingJoin ? "Joining..." : "Join Group"}
         </button>
+        {statusCode === 404 && (
+          <p className="text-red-500 mt-2">Group not found</p>
+        )}
       </div>
 
       <div className="my-20 flex flex-col items-center">
