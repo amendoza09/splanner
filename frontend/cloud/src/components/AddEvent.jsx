@@ -69,12 +69,12 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
             {members.map((member) => (
               <button 
                     key={member.user_id}
-                    className={`px-3 py-2 w-[5rem] mx-5 mb-5 rounded-full text-white ${
+                    className={`px-3 py-2 w-[5rem] mx-5 mb-5 rounded-full ${
                       selectedMember?.user_id === member.user_id
                         ? "ring-1 ring-gray-500 shadow-md"
-                        : ""
+                        : "bg-gray-300 text-gray-600"
                     }`}
-                        style={{ backgroundColor: member.color }}
+                        style={{ backgroundColor: selectedMember?.user_id === member.user_id ? member.color : '#D1D5DB' }}
                         onClick={() => setSelectedMember(member)}
               >
                 {member.name}
@@ -103,13 +103,7 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
                 type="date"
                 className="border rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={taskStartDate}
-                onChange={(e) => setTaskStartDate(e.target.value)}
-              />
-              <input
-                type="date"
-                className="border rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={taskEndDate}
-                onChange={(e) => setTaskEndDate(e.target.value)}
+                onChange={(e) => (setTaskStartDate(e.target.value), setTaskEndDate(e.target.value))}
               />
               </>
             )}

@@ -99,7 +99,7 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh}) =>
             </div>
             <button
                 onClick={() => setAddEventOpen(true)}
-                className="absolute bottom-10 right-10  flex items-center justify-center"
+                className="absolute bottom-10 right-10 opacity-80 flex items-center justify-center"
             >
                 <IoAddCircle size={64} color="var(--green)" />
             </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { format, startOfWeek, endOfWeek, getDay, eachDayOfInterval } from 'date-fns';
 
 const HOUR_HEIGHT = 50;
@@ -10,6 +10,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
     const [dayPosition, setDayPosition] = useState(null);
     const [dayPositions, setDayPositions] = useState({});
     const [now, setNow] = useState(new Date());
+    const scrollRef = useRef(null);
+    const nowLineRef = useRef(null);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const dayAbrevs = ["Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
@@ -37,7 +39,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                 id: event.event_id,
                 title: event.title,
                 date: format(start, "yyyy-MM-dd"),
-                start_time: start,  
+                start_time: start, 
+                end_time: end, 
                 startMinutes: start.getHours() * 60 + start.getMinutes(),
                 endMinutes: end.getHours() * 60 + end.getMinutes(),
                 member: member.name,
@@ -79,6 +82,15 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
         if (hour === 12) return "12 PM";
         return `${hour - 12} PM`;
     };
+
+    useEffect(() => {
+        if (scrollRef.current && nowLineRef.current) {
+            nowLineRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }, [nowTop]);
 
     const handleDayPress = (day) => {
         {/*
@@ -177,7 +189,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
             </div>
             
             {/* Time grid */}
-            <div className="flex-1 overflow-y-auto touch-pan-y overscroll-contain relative md:px-2 no-scrollbar ">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto touch-pan-y overscroll-contain relative md:px-2 no-scrollbar ">
 
                 {/* Shared height wrapper */}
                 <div
@@ -278,6 +290,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             <div
                                 className="absolute -left-2 h-2 w-2  bg-red-500 rounded-full"
                                 style={{ top: nowTop + 25}}
+                                ref={nowLineRef}
                             />
 
                             {/* Red line */}
@@ -290,7 +303,6 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         }
                     )}
                     </div>
-
                 </div>
             </div> 
         </div>

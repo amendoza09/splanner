@@ -11,21 +11,13 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members}) => {
     const [endTime, setEndTime] = useState("");
     const [selectedMember, setSelectedMember] = useState(null);
     const [notes,setNotes] = useState("");
-    const [task,setTask] = useState(null);
-
-    const toDateInputValue = (value) => {
-      if (!value) return "";
-      const date = new Date(value);
-      return isNaN(date) ? "" : date.toISOString().split("T")[0];
-    };
+    const [task,setTask] = useState(false);
 
     useEffect(() => {
       if (event) {
         setTitle(event.title);
-
-        setStartTime(toDateInputValue(event.start_time));
-        setEndTime(toDateInputValue(event.end_time));
-
+        setStartTime(new Date(event.start_time));
+        setEndTime(new Date(event.end_time));
         setSelectedMember(event.member);
         setNotes(event.notes || "");
         setTask(event.is_task);
@@ -39,8 +31,8 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members}) => {
     const deleteAnEvent = async () => {
       try {
         await deleteEvent(event.user_id, event.id);
-        onDelete?.();   // refresh parent
-        onClose();      // close modal
+        onDelete?.();   
+        onClose(); 
       } catch (err) {
         console.error("Failed to delete event", err);
       }
@@ -62,40 +54,68 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members}) => {
 
     const cancelEdit = () => {
       setTitle(event.title);
-      setStartTime(toDateInputValue(event.start_time));
-      setEndTime(toDateInputValue(event.end_time));
+      setStartTime(event.start_time);
+      setEndTime(event.end_time);
       setSelectedMember(event.member);
       setNotes(event.notes || "");
       setTask(event.is_task);
       setIsEditing(false);
     };
+
+
+    const formatTime = (time) => {
+      const format = (date) => {
+        let hours = date.getHours();
+        const minutes = date.getMinutes();
+
+        hours = hours % 12 || 12;
+
+        return minutes === 0
+          ? `${hours}`
+          : `${hours}:${minutes.toString().padStart(2, "0")}`;
+      };
+
+      const start = new Date(time);
+      const startFormatted = format(start);
+      const startPeriod = start.getHours() >= 12 ? "PM" : "AM";
+
+      return  `${startFormatted} ${startPeriod}`;
+    };
+
+    const toInputDateTime = (dateString) => {
+      if (!dateString) return "";
+
+      return new Date(dateString).toISOString().slice(0, 16);
+    };
+
     return(
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-[380px] md:w-[500px] h-auto relative justify-center flex flex-col">
+        <div className="bg-white rounded-lg p-6 w-[380px] md:w-[500px] h-auto relative flex flex-col">
           <div>
-            <h2 className="text-lg font-bold mb-4">event info</h2>
             <div className="gap-3">
               {!isEditing ? (
                 <>
                   <h3 className="font-bold py-2">{title}</h3>
                   <p>{selectedMember}</p>
-                  <p>{startTime.toLocaleString()}</p>
-                  <p>{endTime.toLocaleString()}</p>
+                  {!task && <p>{formatTime(startTime)}-{formatTime(endTime)}</p>}
                   <p>{notes}</p>
-                  <p>{task} Task</p>
                 </>
               ) : (
                 <>
                   {members.map((member) => (
-                    <button 
-                          key={member.user_id}
-                          className={`px-3 py-2 w-[5rem] mx-5 mb-5 rounded-full text-white ${
-                            selectedMember?.user_id === member.user_id
-                              ? "ring-1 ring-gray-500 shadow-md"
-                              : ""
-                          }`}
-                              style={{ backgroundColor: member.color }}
-                              onClick={() => setSelectedMember(member)}
+                    <button
+                      key={member.user_id}
+                      className={`px-3 py-2 w-[5rem] mx-5 mb-5 rounded-full ${
+                        (selectedMember === member.name || selectedMember.user_id === member.user_id)
+                          ? "ring-1 ring-gray-500 shadow-md"
+                          : "bg-gray-300 text-gray-600"  
+                      }`}
+                      style={{
+                        backgroundColor: (selectedMember === member.name || selectedMember.user_id === member.user_id)
+                        ? member.color 
+                        : '#D1D5DB',
+                      }}
+                      onClick={() => setSelectedMember(member)}
                     >
                       {member.name}
                     </button>
@@ -105,34 +125,55 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members}) => {
                     value={title}
                     onChange={e => setTitle(e.target.value)}
                   />
-                  <input
-                    className="border p-2 w-full mt-2"
-                    type="date"
-                    value={startTime}
-                    onChange={e => setStartTime(e.target.value)}
-                  />
-                  <input
-                    type="date"
-                    className="border p-2 w-full mt-2"
-                    value={endTime}
-                    onChange={e => setEndTime(e.target.value)}
-                  />
+                  {!task ? (
+                    <>
+                      <input
+                        className="border p-2 w-full mt-2"
+                        type="datetime-local"  // For non-task events, allow date and time selection
+                        value={toInputDateTime(startTime)}
+                        onChange={e => setStartTime(e.target.value)}
+                      />
+                      <input
+                        type="datetime-local"
+                        className="border p-2 w-full mt-2"
+                        value={toInputDateTime(endTime)}
+                        onChange={e => setEndTime(e.target.value)}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        className="border p-2 w-full mt-2"
+                        type="date"  // For tasks, only allow date selection
+                        value={startTime}
+                        onChange={e => {
+                          setStartTime(e.target.value);
+                          setEndTime(e.target.value)
+                        }}
+                      />
+                    </>
+                  )}
                   <input
                     className="border p-2 w-full mt-2"
                     value={notes}
+                    placeholder="Notes"
                     onChange={e => setNotes(e.target.value)}
                   />
-                  <input
-                    type={'checkbox'}
-                    className="border p-2 w-full mt-2"
-                    value={task}
-                    onChange={e => setTask(e.target.checked)}
-                  />
+                  <div className="flex flex-row items-center mt-2 gap-2">
+                    <input
+                      type={'checkbox'}
+                      className="border"
+                      checked={task}
+                      onChange={e => setTask(e.target.checked)}
+                    />
+                    <p className="">Task</p>
+                  </div>
+                  
                   
 
                   <button
                     onClick={handleEvent}
-                    className="mt-3 bg-green-600 text-white px-4 py-2 rounded"
+                    className="mt-3 bg-green-600 text-white px-4 py-2 mr-2 rounded"
                   >
                     Save
                   </button>
