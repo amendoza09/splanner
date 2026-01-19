@@ -38,8 +38,13 @@ export const addUserToGroup = async (groupCode, member) => {
 };
 
 export const addEventToUser = async (userId, event) => {
-  const res = await API.post(`/members/${userId}/events`, event);
-  return res.data;
+  try{
+    const res = await API.post(`/members/${userId}/events`, event);
+    return res.data;
+  } catch (err) {
+    console.error("failed to create event", err);
+  }
+  
 };
 
 export const createGroup = async () => {

@@ -23,13 +23,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        API_URL,
-        HOST_URL,
-    ],
+    allow_origins=["*"],  # This will allow all origins.
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers.
 )
-
 # get group
 @app.get("/group/{group_code}")
 def group(group_code: str, db: Session = Depends(get_db)):

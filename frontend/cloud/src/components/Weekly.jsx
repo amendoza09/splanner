@@ -142,10 +142,10 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             {/* Day button */}
                             <button
                                 onClick={() => handleDayPress(item)}
-                                className="h-[30px] w-full flex items-center justify-center"
+                                className="h-[30px]  flex items-center justify-center"
                             >
                                 <span
-                                className={`w-8 h-8 items-center flex justify-center ${
+                                className={`w-6 h-6 items-center flex justify-center ${
                                     isToday
                                     ? "font-semibold bg-[var(--red)] rounded-full"
                                     : ""
