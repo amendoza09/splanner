@@ -18,28 +18,48 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
         alert("Please fill out all fields");
         return;
       }
-
+      if (isTask && new Date(taskEndDate) < new Date(taskStartDate)) {
+        alert("Task end date cannot be before start date");
+        return;
+      }
+      if (!isTask && new Date(endTime) < new Date(startTime)) {
+        alert("End time cannot be before start time");
+        return;
+      }
       if (isTask && !taskStartDate) {
         alert("Please select a date for the task");
         return;
       }
-
       if (!isTask && (!startTime || !endTime)) {
         alert("Please provide start and end times");
         return;
       }
-
-      await addEventToUser(selectedMember.user_id, {
-        title,
-        is_task: isTask,
-        start_time: isTask ? `${taskStartDate}T00:00:00` : `${startTime}:00`,
-        end_time: isTask ? `${taskEndDate}T23:59:59` : `${endTime}:00`,
-        notes,
-      });
-
-      onNewEvent?.();
-      onClose();
+      try {
+        await addEventToUser(selectedMember.user_id, {
+          title,
+          is_task: isTask,
+          start_time: isTask ? `${taskStartDate}T00:00:00` : `${startTime}:00`,
+          end_time: isTask ? `${taskEndDate}T23:59:59` : `${endTime}:00`,
+          notes,
+        });
+        resetForm();
+        onNewEvent?.();
+        onClose();
+      } catch (e){
+        console.error("Error making new event", e);
+      }
     };
+
+    const resetForm = () => {
+      setSelectedMember(null);
+        setTitle("");
+        setIsTask(false);
+        setStartTime(new Date());
+        setEndTime(new Date());
+        setTaskEndDate("");
+        setTaskStartDate("");
+        setNotes("");
+    }
 
     return(
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -120,10 +140,14 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent}) => {
             
           </div>
           <div className="flex justify-end gap-2">
-            <button  className="px-4 py-2 text-red-600" onClick={onClose}>
+            <button  className="px-4 py-2 text-red-600" onClick={() => {resetForm(); onClose()}}>
               Close
             </button>
-            <button  className="px-4 py-2 rounded-full bg-[#b7ffa1] shadow-md" onClick={handleSubmit}>
+            <button  
+              className="px-4 py-2 rounded-full bg-[#b7ffa1]" 
+              onClick={handleSubmit}
+               disabled={!title || !selectedMember || (isTask && (!taskStartDate || !taskEndDate)) || (!isTask && (!startTime || !endTime))}
+            >
               Create
             </button>
           </div>

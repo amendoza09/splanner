@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, time
 from typing import Optional
 from dotenv import load_dotenv
 import socketio
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 import string
 import random
@@ -18,6 +19,8 @@ import random
 load_dotenv()
 API_URL = os.getenv("API_URL")
 HOST_URL = os.getenv("HOST_URL")
+
+sio = socketio.Server()
 
 app = FastAPI()
 
@@ -28,6 +31,27 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers.
 )
+
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+
+# Add the socket.io instance to the FastAPI app
+app.mount("/socket.io", sio)
+
+# SocketIO event handling
+@sio.event
+def connect(sid, environ):
+    print(f"Client {sid} connected")
+
+@sio.event
+def disconnect(sid):
+    print(f"Client {sid} disconnected")
+
+@sio.event
+def add_event(sid, event_data):
+    # Handle incoming events here, e.g., broadcast them
+    print("Event received:", event_data)
+    sio.emit("event-added", event_data)  # Emit the event to all clients
+    
 # get group
 @app.get("/group/{group_code}")
 def group(group_code: str, db: Session = Depends(get_db)):
@@ -164,6 +188,15 @@ def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
     # Refresh all new events
     for e in created_events:
         db.refresh(e)
+        
+    sio.emit("event-added", {
+        "event_id": new_event.id,
+        "title": new_event.title,
+        "start_time": new_event.start_time,
+        "end_time": new_event.end_time,
+        "notes": new_event.notes,
+        "is_task": new_event.is_task
+    })
 
     return [
         {

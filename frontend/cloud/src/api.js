@@ -2,10 +2,12 @@ import axios from "axios";
 import { io } from "socket.io-client";
 
 const API_URL = "REMOVED";
-
 export const API = axios.create({
   baseURL: API_URL,
 });
+
+const socket = io(API_URL);
+
 
 export const getGroupByCode = async (groupCode) => {
     try {
@@ -40,7 +42,9 @@ export const addUserToGroup = async (groupCode, member) => {
 export const addEventToUser = async (userId, event) => {
   try{
     const res = await API.post(`/members/${userId}/events`, event);
-    return res.data;
+    socket.emit("event-added", res.data);
+
+    return res.data
   } catch (err) {
     console.error("failed to create event", err);
   }

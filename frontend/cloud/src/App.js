@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
-import { io } from "socket.io-client"; 
+import { io } from "socket.io-client";
 
 import { GiHamburgerMenu } from "react-icons/gi";
 
 import { getGroupByCode, createGroup} from './api';
 
-const socket = io(import.meta.env.API_URL);
+const socket = io("REMOVED");
 
 function App() {
   const [members, setMembers] = useState([]);
@@ -87,16 +87,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if(!groupCode) return;
-
-    socket.emit("join-group",groupCode);
-    socket.on("group-updated", refresh)
-
+    socket.on('event-added', (newEvent) => {
+      console.log('New event added:', newEvent);
+    });
     return () => {
-      socket.off("group-updated", refresh);
-      socket.emit("leave-group", groupCode);
-    }
-  }, [groupCode, refresh])
+      socket.off('event-added');
+    };
+  }, []);
 
   if(!groupCode) {
     return (
