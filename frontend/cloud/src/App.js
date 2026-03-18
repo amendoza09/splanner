@@ -6,14 +6,19 @@ import { io } from "socket.io-client";
 
 import { getGroupByCode, createGroup } from './api';
 
-const socket = io("REMOVED");
+const SOCKET_URL = "REMOVED";
+const socket = io(SOCKET_URL, {
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 10000,
+});
 
 function App() {
   const [members, setMembers] = useState([]);
   const [groupCode, setGroupCode] = useState(null);
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
   const [status, setStatus] = useState(null);
 
   const enterGroup = async (code) => {
@@ -31,6 +36,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    if (groupCode) socket.emit("leave_group", { group_code: groupCode });
     localStorage.removeItem("groupCode");
     setGroupCode(null);
     setMembers([]);
@@ -41,7 +47,7 @@ function App() {
       setLoadingJoin(true);
       await enterGroup(code);
     } catch (e) {
-      alert("Invalid group code", e);
+      alert("Invalid group code");
     } finally {
       setLoadingJoin(false);
     }
@@ -66,15 +72,38 @@ function App() {
     setMembers(data.users.map(u => ({ ...u, events: u.events ?? [] })));
   }, [groupCode]);
 
+  // On mount — restore saved group
   useEffect(() => {
     const savedCode = localStorage.getItem("groupCode");
     if (savedCode) enterGroup(savedCode);
   }, []);
 
+  // When groupCode is set, join the socket room
   useEffect(() => {
-    socket.on('event-added', (newEvent) => { console.log('New event added:', newEvent); });
-    return () => { socket.off('event-added'); };
-  }, []);
+    if (!groupCode) return;
+    socket.emit("join_group", { group_code: groupCode });
+    return () => {
+      socket.emit("leave_group", { group_code: groupCode });
+    };
+  }, [groupCode]);
+
+  // Listen for server-side refresh broadcasts
+  useEffect(() => {
+    const handler = () => refresh();
+    socket.on("refresh", handler);
+
+    // Also re-join room on reconnect (Pi network drops)
+    const onReconnect = () => {
+      if (groupCode) socket.emit("join_group", { group_code: groupCode });
+      refresh();
+    };
+    socket.on("connect", onReconnect);
+
+    return () => {
+      socket.off("refresh", handler);
+      socket.off("connect", onReconnect);
+    };
+  }, [refresh, groupCode]);
 
   if (!groupCode) {
     return (
@@ -90,7 +119,6 @@ function App() {
 
   return (
     <div className="flex flex-row w-screen h-screen overflow-hidden fixed inset-0">
-      {/* Slim sidebar rail — always visible */}
       <Sidebar
         members={members}
         groupCode={groupCode}
@@ -99,8 +127,6 @@ function App() {
         onUpdate={refresh}
         onUserDelete={refresh}
       />
-
-      {/* Main calendar area takes remaining space */}
       <div className="flex-1 min-w-0">
         <Calendar
           members={members}
