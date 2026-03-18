@@ -1,50 +1,44 @@
 import { useState } from 'react';
 
 const AddMember = ({ isOpen, onClose, onAdd }) => {
-    const [name, setName] = useState("");
-    const [color,setColor] = useState("#f783a4");
+  const [name, setName] = useState("");
+  const [color, setColor] = useState("#f783a4");
 
-    if(!isOpen) return null;
+  if (!isOpen) return null;
 
-    const handleAdd = () => {
-      if(!name.trim()) return;
-      onAdd({ name, color });
-      setName("");
-      setColor("#f783a4")
-    }
+  const handleAdd = () => {
+    if (!name.trim()) return;
+    onAdd({ name, color });
+    setName(""); setColor("#f783a4");
+  };
 
-    return(
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center  w-screen px-[2rem] z-50">
-        <div className="bg-white rounded-lg p-6 w-[380px] md:w-[500px] h-[300px] relative justify-center flex flex-col">
-          <div>
-            <h2 className="text-lg font-bold mb-4">Add Member</h2>
-
-            <input 
-              type="text"
-              placeholder="Name"
-              className="border border-gray-300 rounded px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input 
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button  className="px-4 py-2 text-red-600 rounded" onClick={onClose}>
-              Cancel
-            </button>
-            <button  
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" 
-              onClick={handleAdd}
-            >
-              Add
-            </button>
-          </div>
+  return (
+    <div className="fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
+      <div className="bg-white rounded-t-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-base">Add Member</h2>
+          <button onClick={onClose} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl">✕</button>
         </div>
+        <input
+          type="text" placeholder="Name"
+          className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={name} onChange={(e) => setName(e.target.value)}
+        />
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-gray-500">Color</label>
+          <input type="color" value={color} onChange={(e) => setColor(e.target.value)}
+            className="h-10 w-16 rounded cursor-pointer border border-gray-200" />
+          <div className="w-8 h-8 rounded-full" style={{ backgroundColor: color }} />
+        </div>
+        <button
+          onClick={handleAdd} disabled={!name.trim()}
+          className="w-full py-3 rounded-xl bg-blue-500 text-white font-semibold disabled:opacity-40"
+        >
+          Add
+        </button>
       </div>
-    );
+    </div>
+  );
 };
 
 export default AddMember;

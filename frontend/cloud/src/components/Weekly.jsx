@@ -1,46 +1,29 @@
 import { useState, useEffect, useRef } from 'react'
-import { format, startOfWeek, endOfWeek, getDay, eachDayOfInterval } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 
 const HOUR_HEIGHT = 50;
 const TOTAL_HOURS = 24;
-const HEADER_ROW_HEIGHT = 50;
 
 const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDeleteEvent }) => {
-    const [isExpanded, setIsExpanded] = useState(true);
-    const [dayPosition, setDayPosition] = useState(null);
-    const [dayPositions, setDayPositions] = useState({});
     const [now, setNow] = useState(new Date());
     const scrollRef = useRef(null);
     const nowLineRef = useRef(null);
 
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const dayAbrevs = ["Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
+    const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
     const currentDate = format(new Date(), 'yyyy-MM-dd');
     const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
     const nowTop = (minutesSinceMidnight / 60) * HOUR_HEIGHT;
-    const todaykey = format(new Date(), "yyyy-MM-dd");
-
-    const timeToMinutes = (time) => {
-        const [raw, period] = time.split(" ");
-        let [hours, minutes] = raw.split(":").map(Number);
-
-        if (period === "PM" && hours !== 12) hours += 12;
-        if (period === "AM" && hours ===12) hours = 0;
-
-        return hours * 60 + minutes;
-    }
 
     const allEvents = members.flatMap(member =>
         (member.events || []).map(event => {
             const start = new Date(event.start_time);
             const end = new Date(event.end_time);
-
             return {
                 id: event.event_id,
                 title: event.title,
                 date: format(start, "yyyy-MM-dd"),
-                start_time: start, 
-                end_time: end, 
+                start_time: start,
+                end_time: end,
                 startMinutes: start.getHours() * 60 + start.getMinutes(),
                 endMinutes: end.getHours() * 60 + end.getMinutes(),
                 member: member.name,
@@ -55,258 +38,213 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
     const tasksByDate = allEvents
         .filter(e => e.is_task)
         .reduce((acc, task) => {
-            const dateKey = format(new Date(task.start_time), "yyyy-MM-dd");
-            acc[dateKey] = acc[dateKey] || [];
-            acc[dateKey].push(task);
+            const key = format(new Date(task.start_time), "yyyy-MM-dd");
+            acc[key] = acc[key] || [];
+            acc[key].push(task);
             return acc;
         }, {});
 
     const agendaEvents = allEvents
         .filter(e => !e.is_task)
-        .reduce((acc, task) => {
-            const dateKey = format(new Date(task.start_time), "yyyy-MM-dd");
-            acc[dateKey] = acc[dateKey] || [];
-            acc[dateKey].push(task);
+        .reduce((acc, event) => {
+            const key = format(new Date(event.start_time), "yyyy-MM-dd");
+            acc[key] = acc[key] || [];
+            acc[key].push(event);
             return acc;
         }, {});
-    
+
     const generateWeekDays = (date) => {
-        const startOfSelectedWeek = startOfWeek(date, { weekStartsOn: 0 });
-        const endOfSelectedWeek = endOfWeek(date, { weekStartsOn: 0 });
-        return eachDayOfInterval({ start: startOfSelectedWeek, end: endOfSelectedWeek });
+        const start = startOfWeek(date, { weekStartsOn: 0 });
+        const end = endOfWeek(date, { weekStartsOn: 0 });
+        return eachDayOfInterval({ start, end });
     };
 
     const formatHour = (hour) => {
-        if (hour === 0) return "12 AM";
-        if (hour < 12) return `${hour} AM`;
-        if (hour === 12) return "12 PM";
-        return `${hour - 12} PM`;
+        if (hour === 0) return "12a";
+        if (hour < 12) return `${hour}a`;
+        if (hour === 12) return "12p";
+        return `${hour - 12}p`;
+    };
+
+    const formatEventTime = (date) => {
+        let h = date.getHours();
+        const m = date.getMinutes();
+        const p = h >= 12 ? 'p' : 'a';
+        h = h % 12 || 12;
+        return m === 0 ? `${h}${p}` : `${h}:${m.toString().padStart(2,'0')}${p}`;
     };
 
     useEffect(() => {
         if (scrollRef.current && nowLineRef.current) {
-            nowLineRef.current.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
+            nowLineRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
         }
     }, [nowTop]);
 
-    const handleDayPress = (day) => {
-        {/*
-        const formatDate = format(day, 'yyyy-MM-dd');
-
-        if(selectedDate === formatDate && !isExpanded) {
-            handleReset();
-            return; 
-        };
-
-        const yPosition = dayPositions[formatDate] || 0;
-
-        setDayPosition(yPosition);
-        setSelectedDate(formatDate);
-        setIsExpanded(false);
-        */}
-    };
-
-    const handleReset = () => {
-      // setSelectedDate(null);
-    }
-
     useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(new Date());
-        }, 60000);
-        return () => clearInterval(interval)
+        const interval = setInterval(() => setNow(new Date()), 60000);
+        return () => clearInterval(interval);
     }, []);
 
+    const weekDays = generateWeekDays(selectedDate ? new Date(selectedDate) : new Date());
+    const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
+
     return (
-        <div className="h-[92vh] flex flex-col overflow-hidden">
-            {/* Days of the week */}
-            <div className="sticky top-0 z-20 ">
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] text-center border-b border-black-500">
-                    <div />
-                    {dayAbrevs.map((day, index) => (
-                        <div key={index} className="h-[25px] flex items-center justify-center font-medium">
-                            <p>{day}</p>
-                        </div>
-                    ))}
-                </div>
-                {/* week days */}
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] shadow-md text-center px-2 border-b border-black-500">
-                    <div />
-                    {generateWeekDays(selectedDate ? new Date(selectedDate) : new Date()).map(
-                        (item, i) => {
-                        if (!item) return <div key={i} className="h-[30px]" />;
+        <div className="h-[92vh] flex flex-col overflow-hidden bg-white">
 
-                        const formatDate = format(item, "yyyy-MM-dd");
-                        const isSelected = selectedDate === formatDate;
-                        const isToday = formatDate === currentDate;
-                        const dayTasks = tasksByDate[formatDate] || [];
+            {/* ── Sticky header ── */}
+            <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
 
+                {/* Row 1: day letter + date number */}
+                <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: '48px repeat(7, 1fr)' }}>
+                    <div />
+                    {weekDays.map((day, i) => {
+                        const dateKey = format(day, 'yyyy-MM-dd');
+                        const isToday = dateKey === currentDate;
                         return (
-                            <div
-                                key={formatDate}
-                                className={`flex flex-col items-center w-full left-1 right-1 ${
-                                isSelected ? "border-2 border-[var(--red)]" : ""
-                                }`}
-                            >
-                            {/* Day button */}
-                            <button
-                                onClick={() => handleDayPress(item)}
-                                className="h-[30px]  flex items-center justify-center"
-                            >
-                                <span
-                                className={`w-6 h-6 items-center flex justify-center ${
-                                    isToday
-                                    ? "font-semibold bg-[var(--red)] rounded-full"
-                                    : ""
-                                }`}
-                                >
-                                {format(item, "d")}
+                            <div key={dateKey} className="flex flex-col items-center py-1 gap-0.5">
+                                <span className="text-[10px] text-gray-400 font-medium leading-none">
+                                    {DAY_LETTERS[i]}
                                 </span>
-                            </button>
-
-                            {/* Tasks */}
-                            {dayTasks.map((task) => (
-                                <div
-                                    onClick={() => {
-                                        onEventOpen(true);
-                                        onSelectedEvent(task);
-                                    }}
-                                    key={task.event_id}
-                                    className="text-xs w-[97%] mb-2 px-2 py-1 left-1 right-1 rounded text-left flex truncate"
-                                    style={{ background: task.color}}
-                                >
-                                    {task.title}
-                                </div>
-                            ))}
+                                <span className={`text-sm w-6 h-6 flex items-center justify-center rounded-full font-medium leading-none
+                                    ${isToday ? 'bg-[var(--red)] text-white' : 'text-gray-700'}`}>
+                                    {format(day, 'd')}
+                                </span>
                             </div>
                         );
-                        }
-                    )}
-                    </div>
-            </div>
-            
-            {/* Time grid */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto touch-pan-y overscroll-contain relative md:px-2 no-scrollbar ">
+                    })}
+                </div>
 
-                {/* Shared height wrapper */}
-                <div
-                    className="relative"
-                    style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
-                >
-
-                    {/* ---------- Time grid ---------- */}
-                    {Array.from({ length: TOTAL_HOURS }).map((_, hour) => (
-                    <div
-                        key={hour}
-                        className="grid grid-cols-[60px_repeat(7,1fr)] items-center"
-                        style={{ height: HOUR_HEIGHT }}
-                    >
-                        <div className="text-gray-500 md:text-xs text-[12px] text-center ">
-                        {formatHour(hour)}
+                {/* Row 2: all-day tasks (only rendered if tasks exist this week) */}
+                {hasAnyTasks && (
+                    <div className="grid" style={{ gridTemplateColumns: '48px repeat(7, 1fr)' }}>
+                        <div className="flex items-center justify-end pr-1">
+                            <span className="text-[9px] text-gray-300 leading-none">all‑day</span>
                         </div>
-                        {dayAbrevs.map((day) => (
-                        <div key={`${day}-${hour}`} className="border-b" />
-                        ))}
+                        {weekDays.map((day) => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
+                            const tasks = tasksByDate[dateKey] || [];
+                            return (
+                                <div key={dateKey} className="flex flex-col gap-0.5 px-0.5 py-1 min-h-[24px]">
+                                    {tasks.map((task) => (
+                                        <button
+                                            key={task.id}
+                                            onClick={() => { onEventOpen(true); onSelectedEvent(task); }}
+                                            className="w-full text-[10px] font-medium text-center rounded px-1 leading-5 truncate opacity-80"
+                                            style={{ backgroundColor: task.color }}
+                                        >
+                                            {task.title}
+                                        </button>
+                                    ))}
+                                </div>
+                            );
+                        })}
                     </div>
+                )}
+            </div>
+
+            {/* ── Scrollable time grid ── */}
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto no-scrollbar touch-pan-y overscroll-contain relative"
+            >
+                <div className="relative" style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}>
+
+                    {/* Hour lines */}
+                    {Array.from({ length: TOTAL_HOURS }).map((_, hour) => (
+                        <div
+                            key={hour}
+                            className="grid items-start"
+                            style={{ gridTemplateColumns: '48px repeat(7, 1fr)', height: HOUR_HEIGHT }}
+                        >
+                            <div className="text-[10px] text-gray-400 text-right pr-2 -mt-2 select-none">
+                                {formatHour(hour)}
+                            </div>
+                            {Array.from({ length: 7 }).map((_, d) => (
+                                <div key={d} className="border-b border-gray-100 h-full" />
+                            ))}
+                        </div>
                     ))}
 
-                    {/* ---------- Events layer ---------- */}
+                    {/* Events layer */}
                     <div
-                        className="absolute top-0 left-0 right-0 grid grid-cols-[60px_repeat(7,1fr)]"
-                        style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
+                        className="absolute top-0 left-0 right-0 pointer-events-none"
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: '48px repeat(7, 1fr)',
+                            height: TOTAL_HOURS * HOUR_HEIGHT,
+                        }}
                     >
-                        {generateWeekDays(new Date(selectedDate)).map((day, index) => {
-                            const dateKey = format(day, "yyyy-MM-dd");
+                        <div /> {/* gutter spacer */}
+                        {weekDays.map((day) => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
                             const dayEvents = agendaEvents[dateKey] || [];
-
                             return (
-                            <div
-                                key={dateKey}
-                                className="relative"
-                                style={{ gridColumnStart: index + 2 }}
-                            >
-                                {dayEvents.map((event, i) => {
-                                const top =
-                                    (event.startMinutes / 60) * HOUR_HEIGHT + 25;
-                                const height =
-                                    ((event.endMinutes - event.startMinutes) / 60) * HOUR_HEIGHT;
-
-                                return (
-                                    <div
-                                        key={event.event_id}
-                                        onClick={() => {
-                                            onEventOpen(true);
-                                            onSelectedEvent(event);
-                                        }}
-                                        className="absolute left-1 right-1 rounded-md text-xs md:text-s text-black text-center pt-3 opacity-80"
-                                        style={{
-                                            top,
-                                            height,
-                                            backgroundColor: event.color,
-                                        }}
-                                    >
-                                        <div className="font-semibold text-center">
-                                            {event.title}
-                                        </div>
-                                        <span className="sm:hidden block">
-                                            {event.member[0]}
-                                        </span>
-                                        <span className="hidden sm:block">
-                                            {event.member}
-                                        </span>
-                                        
-                                    </div>
-                                );
-                                })}
-                            </div>
+                                <div key={dateKey} className="relative pointer-events-auto">
+                                    {dayEvents.map((event) => {
+                                        const top = (event.startMinutes / 60) * HOUR_HEIGHT;
+                                        const height = Math.max(
+                                            ((event.endMinutes - event.startMinutes) / 60) * HOUR_HEIGHT,
+                                            20
+                                        );
+                                        return (
+                                            <button
+                                                key={event.id}
+                                                onClick={() => { onEventOpen(true); onSelectedEvent(event); }}
+                                                className="absolute inset-x-0.5 rounded-md text-left overflow-hidden opacity-80"
+                                                style={{ top, height, backgroundColor: event.color }}
+                                            >
+                                                <div className="px-1 pt-0.5">
+                                                    <div className="text-[10px] font-semibold leading-tight text-center truncate">
+                                                        {event.title}
+                                                    </div>
+                                                    {height > 28 && (
+                                                        <div className="text-[9px] leading-tight opacity-75 text-center truncate">
+                                                            {formatEventTime(event.start_time)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             );
                         })}
                     </div>
 
-                    {/* ---------- Current time line ---------- */}
+                    {/* Current time line — only on today's column */}
                     <div
-                    className="absolute top-0 left-0 right-0 grid grid-cols-[60px_repeat(7,1fr)] pointer-events-none"
-                    style={{ height: (TOTAL_HOURS * HOUR_HEIGHT) }}
+                        className="absolute top-0 left-0 right-0 pointer-events-none"
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: '48px repeat(7, 1fr)',
+                            height: TOTAL_HOURS * HOUR_HEIGHT,
+                        }}
                     >
-                    {generateWeekDays(selectedDate ? new Date(selectedDate) : new Date()).map(
-                        (item, index) => {
-                        if (!item) return null;
-
-                        const formatDate = format(item, "yyyy-MM-dd");
-                        const isToday = formatDate === currentDate;
-
-                        if (!isToday) return null;
-
-                        return (
-                            <div
-                            key="now-line"
-                            className="relative"
-                            style={{ gridColumnStart: index + 2 }}
-                            >
-                            {/* Red dot */}
-                            <div
-                                className="absolute -left-2 h-2 w-2  bg-red-500 rounded-full"
-                                style={{ top: nowTop + 25}}
-                                ref={nowLineRef}
-                            />
-
-                            {/* Red line */}
-                            <div
-                                className="absolute left-0 right-0 h-[2px] mt-[3px] bg-red-500"
-                                style={{ top: nowTop + 25 }}
-                            />
-                            </div>
-                        );
-                        }
-                    )}
+                        <div />
+                        {weekDays.map((day, index) => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
+                            if (dateKey !== currentDate) return <div key={dateKey} />;
+                            return (
+                                <div key="now" className="relative" ref={nowLineRef}>
+                                    {/* dot */}
+                                    <div
+                                        className="absolute w-2 h-2 rounded-full bg-[var(--red)] -left-1"
+                                        style={{ top: nowTop - 3 }}
+                                    />
+                                    {/* line */}
+                                    <div
+                                        className="absolute left-0 right-0 h-[1.5px] bg-[var(--red)]"
+                                        style={{ top: nowTop }}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
+
                 </div>
-            </div> 
+            </div>
         </div>
-    )
-}
+    );
+};
 
 export default WeeklyView;
