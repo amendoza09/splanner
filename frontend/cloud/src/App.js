@@ -4,9 +4,7 @@ import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
 import { io } from "socket.io-client";
 
-import { GiHamburgerMenu } from "react-icons/gi";
-
-import { getGroupByCode, createGroup} from './api';
+import { getGroupByCode, createGroup } from './api';
 
 const socket = io("https://cloud-ktc9.onrender.com");
 
@@ -21,24 +19,14 @@ function App() {
   const enterGroup = async (code) => {
     try {
       const res = await getGroupByCode(code);
-
-      if (!res || res.status !== 200) {
-        setStatus(404);
-        return;
-      }
-      const normalizedMembers = res.users.map(user => ({
-        ...user,
-        events: user.events ?? []
-      }));
-
+      if (!res || res.status !== 200) { setStatus(404); return; }
+      const normalizedMembers = res.users.map(user => ({ ...user, events: user.events ?? [] }));
       setStatus(res.status);
       setGroupCode(code);
       setMembers(normalizedMembers);
       localStorage.setItem("groupCode", code);
-
     } catch (e) {
       setStatus(404);
-      console.log("Group code does not exist");
     }
   };
 
@@ -49,10 +37,10 @@ function App() {
   };
 
   const handleJoinGroup = async (code) => {
-    try{
+    try {
       setLoadingJoin(true);
       await enterGroup(code);
-    }catch (e) {
+    } catch (e) {
       alert("Invalid group code", e);
     } finally {
       setLoadingJoin(false);
@@ -64,102 +52,64 @@ function App() {
       setStatus(null);
       setLoadingCreate(true);
       const data = await createGroup();
-
       await enterGroup(data.group_code);
-    } catch(e) {
+    } catch (e) {
       alert("Cannot make groups at this time");
     } finally {
       setLoadingCreate(false);
     }
-  }
+  };
 
   const refresh = useCallback(async () => {
     if (!groupCode) return;
     const data = await getGroupByCode(groupCode);
-    setMembers(
-      data.users.map(u => ({ ...u, events: u.events ?? [] }))
-    );
+    setMembers(data.users.map(u => ({ ...u, events: u.events ?? [] })));
   }, [groupCode]);
 
   useEffect(() => {
     const savedCode = localStorage.getItem("groupCode");
-    if(savedCode) enterGroup(savedCode);
+    if (savedCode) enterGroup(savedCode);
   }, []);
 
   useEffect(() => {
-    socket.on('event-added', (newEvent) => {
-      console.log('New event added:', newEvent);
-    });
-    return () => {
-      socket.off('event-added');
-    };
+    socket.on('event-added', (newEvent) => { console.log('New event added:', newEvent); });
+    return () => { socket.off('event-added'); };
   }, []);
 
-  if(!groupCode) {
+  if (!groupCode) {
     return (
-        <GroupCodeScreen 
-          onSubmit={handleJoinGroup} 
-          onCreateGroup={handleCreateGroup}
-          loadingJoin={loadingJoin}
-          loadingCreate={loadingCreate}
-          statusCode={status}
-        />
-    )
+      <GroupCodeScreen
+        onSubmit={handleJoinGroup}
+        onCreateGroup={handleCreateGroup}
+        loadingJoin={loadingJoin}
+        loadingCreate={loadingCreate}
+        statusCode={status}
+      />
+    );
   }
 
   return (
-    <div className="flex flex-row w-screen overflow-hidden inset-0 fixed">
-      <button
-        className="sm:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded"
-        onClick={() => setSidebarVisible(true)}
-      >
-        <GiHamburgerMenu size={24} />
-      </button>
-      <span className="hidden sm:block">
-        <Sidebar 
-          members={members} 
-          groupCode={groupCode} 
-          onLogout={handleLogout}
-          onNewMember={refresh} 
-          onUpdate={refresh}
-          onUserDelete={refresh}
-        />
-      </span>
-      {sidebarVisible && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 sm:hidden"
-          onClick={() => setSidebarVisible(false)}
-        />
-      )}
+    <div className="flex flex-row w-screen h-screen overflow-hidden fixed inset-0">
+      {/* Slim sidebar rail — always visible */}
+      <Sidebar
+        members={members}
+        groupCode={groupCode}
+        onLogout={handleLogout}
+        onNewMember={refresh}
+        onUpdate={refresh}
+        onUserDelete={refresh}
+      />
 
-      {/* Mobile sidebar */}
-      <div
-        className={`
-          fixed top-0 left-0 h-full w-32 bg-white z-50 transform
-          transition-transform duration-300 ease-in-out
-          sm:hidden
-          ${sidebarVisible ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        <Sidebar
+      {/* Main calendar area takes remaining space */}
+      <div className="flex-1 min-w-0">
+        <Calendar
           members={members}
-          groupCode={groupCode}
-          onLogout={() => {
-            setSidebarVisible(false);
-            handleLogout();
-          }}
-          onNewMember={refresh}
-          onUpdate={refresh}
-          onUserDelete={refresh}
-        />
-      </div>
-        <Calendar 
-          members={members} 
-          onNewEvent={refresh} 
-          onDeleteEvent={refresh} 
+          onNewEvent={refresh}
+          onDeleteEvent={refresh}
           onUpdate={refresh}
           onRefresh={refresh}
         />
+      </div>
     </div>
   );
 }

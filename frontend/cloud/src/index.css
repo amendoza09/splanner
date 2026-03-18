@@ -6,44 +6,53 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
 :root {
-  --red:#fc6f53;
+  --red: #fc6f53;
   --green: #78eb67;
-   
+  --sidebar-width: 64px;
+  --touch-min: 44px;
+  --radius: 10px;
 }
 
-html,
-body,
-#root {
-  height:100%;
+html, body, #root {
+  height: 100%;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  font-size: 15px;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   touch-action: pan-y;
-
   -webkit-tap-highlight-color: transparent;
 }
 
-*{
+/* Enforce minimum touch targets */
+button {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+}
+
+input[type="text"],
+input[type="date"],
+input[type="datetime-local"] {
+  min-height: var(--touch-min);
+  font-size: 15px;
+}
+
+* {
   -webkit-overflow-scrolling: touch;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

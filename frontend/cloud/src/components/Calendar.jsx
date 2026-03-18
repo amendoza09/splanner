@@ -6,9 +6,9 @@ import { IoMdRefresh } from "react-icons/io";
 
 import { getWeather } from "../api";
 
-import WeeklyView from "./Weekly"
-import MonthlyView from "./Monthly"
-import AddEvent from './AddEvent'
+import WeeklyView from "./Weekly";
+import MonthlyView from "./Monthly";
+import AddEvent from './AddEvent';
 import EventCard from "./EventCard";
 
 import defaultIcon from '../assets/sunny-day.png';
@@ -16,114 +16,113 @@ import nightIcon from '../assets/night.png';
 import rainIcon from '../assets/rainy.png';
 import cloudyIcon from '../assets/icon.png';
 
-const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh}) => {
-    const [view, setView] = useState("week");
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [addEventOpen, setAddEventOpen] = useState(false);
-    const [eventOpen, setEventOpen] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [temp, setTemp] = useState("");
-    const [weatherIcon, setWeatherIcon] = useState("");
+const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) => {
+  const [view, setView] = useState("week");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [addEventOpen, setAddEventOpen] = useState(false);
+  const [eventOpen, setEventOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [temp, setTemp] = useState("");
+  const [weatherIcon, setWeatherIcon] = useState("");
 
-    const getTemp = async () => {
-        const data = await getWeather()
-        const currentHour = data.properties.periods[0]
+  const getTemp = async () => {
+    try {
+      const data = await getWeather();
+      const currentHour = data.properties.periods[0];
+      if (currentHour.probabilityOfPrecipitation?.value >= 60) setWeatherIcon(rainIcon);
+      else if (currentHour.relativeHumidity?.value >= 60) setWeatherIcon(cloudyIcon);
+      else if (!currentHour.isDaytime) setWeatherIcon(nightIcon);
+      else setWeatherIcon(defaultIcon);
+      setTemp(`${currentHour.temperature}°${currentHour.temperatureUnit}`);
+    } catch (e) { /* weather is non-critical */ }
+  };
 
-        if (currentHour.probabilityOfPrecipitation?.value >= 60) {
-            setWeatherIcon(rainIcon);
-        } else if(currentHour.relativeHumidity?.value >= 60){
-            setWeatherIcon(cloudyIcon);
-        } else if(!currentHour.isDaytime){ 
-            setWeatherIcon(nightIcon);
-        } else {
-            setWeatherIcon(defaultIcon);
-        }
+  useEffect(() => {
+    getTemp();
+    const interval = setInterval(getTemp, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-        setTemp(`${currentHour.temperature}°${currentHour.temperatureUnit}`)
-    }
-
-    useEffect(() => {
-        getTemp();
-        const interval = setInterval(() => {
-            getTemp();
-        }, 60 * 60 * 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    return(
-        <div className="flex flex-col w-full h-screen">
-            <div className="flex flex-1 justify-center w-full">
-                <div className="gap-5 md:gap-10 flex px-4 pt-1">
-                    <button 
-                        onClick={() => setView("week")}
-                        className={`p-2 rounded ${
-                            view === "week" ? "bg-gray-200" : "hover:bg-gray-100"
-                        }`} 
-                        >
-                            <MdCalendarViewWeek size={32} />
-                        </button>
-                        <button
-                            onClick={() => setView("month")}
-                        className={`p-2 rounded ${
-                            view === "month" ? "bg-gray-200" : "hover:bg-gray-100"
-                        }`} 
-                        >
-                            <TbCalendarMonthFilled size={32} />
-                        </button>
-                </div>
-                
-                <div className=" absolute right-0 lg:right-10 p-5 items-center flex">
-                    <button type="button" onClick={onRefresh} className="mr-4">
-                        <IoMdRefresh />
-                    </button>
-                    <p className="text-gray-500">{temp}</p>
-                    <img className="w-5 h-5 mx-2 opacity-50" src={weatherIcon}/>
-                </div>
-            </div>
-            <div className="flex-1">
-                   {view === "week" && 
-                        <WeeklyView 
-                            members={members} 
-                            selectedDate={selectedDate} 
-                            onSelectedEvent={setSelectedEvent} 
-                            onEventOpen={setEventOpen}
-                            onDeleteEvent={onDeleteEvent}
-                        />
-                    }
-                   {view === "month" && 
-                        <MonthlyView 
-                            members={members} 
-                            onDayPress={(day) => { setView("week"); setSelectedDate(day); }}
-                        />
-                    }
-            </div>
-            <button
-                onClick={() => setAddEventOpen(true)}
-                className="absolute bottom-10 right-10 opacity-80 flex items-center justify-center"
-            >
-                <IoAddCircle size={64} color="var(--green)" />
-            </button>
-            <div className="flex-1">
-                    <AddEvent
-                        isOpen={addEventOpen}
-                        onClose={() => setAddEventOpen(false)}
-                        members={members}
-                        onNewEvent={onNewEvent}
-                    />
-            </div>
-            <div>
-                    <EventCard 
-                        isOpen={eventOpen}
-                        onClose={() => setEventOpen(false)}
-                        event={selectedEvent}
-                        onDelete={onDeleteEvent}
-                        onUpdate={onUpdate}
-                        members={members}
-                    />
-            </div>
-
+  return (
+    <div className="flex flex-col w-full h-screen overflow-hidden">
+      {/* Compact toolbar — single row */}
+      <div className="flex items-center justify-between px-3 py-1 border-b border-gray-200 bg-white" style={{ height: 48 }}>
+        {/* View toggles */}
+        <div className="flex gap-1">
+          <button
+            onClick={() => setView("week")}
+            className={`p-2 rounded-lg ${view === "week" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            style={{ minHeight: 36, minWidth: 36 }}
+          >
+            <MdCalendarViewWeek size={22} />
+          </button>
+          <button
+            onClick={() => setView("month")}
+            className={`p-2 rounded-lg ${view === "month" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            style={{ minHeight: 36, minWidth: 36 }}
+          >
+            <TbCalendarMonthFilled size={22} />
+          </button>
         </div>
-    );
+
+        {/* Weather + refresh */}
+        <div className="flex items-center gap-2">
+          <button onClick={onRefresh} className="p-1 rounded hover:bg-gray-100" style={{ minHeight: 36, minWidth: 36 }}>
+            <IoMdRefresh size={18} />
+          </button>
+          {temp && (
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-gray-500">{temp}</span>
+              {weatherIcon && <img className="w-5 h-5 opacity-60" src={weatherIcon} alt="" />}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Calendar view — fills remaining height */}
+      <div className="flex-1 min-h-0">
+        {view === "week" && (
+          <WeeklyView
+            members={members}
+            selectedDate={selectedDate}
+            onSelectedEvent={setSelectedEvent}
+            onEventOpen={setEventOpen}
+            onDeleteEvent={onDeleteEvent}
+          />
+        )}
+        {view === "month" && (
+          <MonthlyView
+            members={members}
+            onDayPress={(day) => { setView("week"); setSelectedDate(day); }}
+          />
+        )}
+      </div>
+
+      {/* Floating add button */}
+      <button
+        onClick={() => setAddEventOpen(true)}
+        className="absolute bottom-5 right-5 opacity-90 active:scale-95 transition-transform"
+        style={{ minHeight: 'unset', minWidth: 'unset' }}
+      >
+        <IoAddCircle size={56} color="var(--green)" />
+      </button>
+
+      <AddEvent
+        isOpen={addEventOpen}
+        onClose={() => setAddEventOpen(false)}
+        members={members}
+        onNewEvent={onNewEvent}
+      />
+      <EventCard
+        isOpen={eventOpen}
+        onClose={() => setEventOpen(false)}
+        event={selectedEvent}
+        onDelete={onDeleteEvent}
+        onUpdate={onUpdate}
+        members={members}
+      />
+    </div>
+  );
 };
 
 export default Calendar;
