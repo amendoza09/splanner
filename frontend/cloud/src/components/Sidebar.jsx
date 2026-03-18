@@ -5,74 +5,84 @@ import AddMember from "./AddMember";
 import Member from './Member';
 import Settings from "./Settings";
 
-const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate }) => {
-    const [isAddOpen, setIsAddOpen] = useState(false);
-    const [memberOpen, setMemberOpen] = useState(false);
-    const [settingsOpen, setSettingsOpen] = useState(false);
-    const [selectedMember, setSelectedMember] = useState("");
+// Slim 64px rail — shows colored initial circles, no text
+const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate, onUserDelete }) => {
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [memberOpen, setMemberOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
 
-    const handleAddMember = async (member) => {
-        try {
-            await addUserToGroup(groupCode, member);
-            await onNewMember();
-            setIsAddOpen(false);
-        } catch(e) {
-            alert("Failed to add member");
-        }
-    };
-    
-    return(
-        <div className="h-screen md:w-[8rem] border border-1 py-8 px-2 flex flex-col">
-            <div className="w-full flex flex-col items-start gap-5">
-                {members.map((member) => (
-                    <button 
-                        key={member.user_id}
-                        className={`px-1 py-2 sm:text-xs md:text-lg rounded-full w-full whitespace-nowrap`}
-                        style={{ backgroundColor: member.color }}
-                        onClick={() =>{
-                            setMemberOpen(true)
-                            setSelectedMember(member)
-                        }}
-                    >
-                        <span className="hidden sm:block">
-                            {member.name}
-                        </span>
-                        <span className="sm:hidden block">
-                            {member.name[0]}
-                        </span>
-                        
-                    </button>
-                ))}
-                <button className="px-3" onClick={()=> setIsAddOpen(true)}>+</button>
-            </div>
-            <div className="mt-[auto]">
-                <div className="flex my-5 justify-center">
-                    <button onClick={()=> setSettingsOpen(true)}>
-                        <IoSettingsOutline size={32} color="gray" />
-                    </button>
-                </div>
-            </div>
+  const handleAddMember = async (member) => {
+    try {
+      await addUserToGroup(groupCode, member);
+      await onNewMember();
+      setIsAddOpen(false);
+    } catch (e) {
+      alert("Failed to add member");
+    }
+  };
 
-            <AddMember
-                isOpen={isAddOpen}
-                onClose={() => setIsAddOpen(false)}
-                onAdd={handleAddMember}
-            />
-            <Member 
-                isOpen={memberOpen}
-                onClose={() => setMemberOpen(false)}
-                groupCode={groupCode}
-                member={selectedMember}
-                onUpdate={onUpdate}
-            />
-            <Settings 
-                isOpen={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-                groupCode={groupCode}
-                onLogout={onLogout}
-            />
-        </div>
-    );
+  return (
+    <div
+      className="h-screen flex flex-col items-center py-4 gap-3 border-r border-gray-200 bg-white"
+      style={{ width: 64, minWidth: 64 }}
+    >
+      {/* Member circles */}
+      <div className="flex flex-col items-center gap-3 flex-1 w-full overflow-y-auto no-scrollbar">
+        {members.map((member) => (
+          <button
+            key={member.user_id}
+            title={member.name}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm active:scale-95 transition-transform"
+            style={{ backgroundColor: member.color, minHeight: 40, minWidth: 40 }}
+            onClick={() => { setMemberOpen(true); setSelectedMember(member); }}
+          >
+            {member.name[0].toUpperCase()}
+          </button>
+        ))}
+
+        {/* Add member button */}
+        <button
+          className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 text-xl flex items-center justify-center active:bg-gray-200 transition-colors"
+          style={{ minHeight: 40, minWidth: 40 }}
+          onClick={() => setIsAddOpen(true)}
+        >
+          +
+        </button>
+      </div>
+
+      {/* Settings at bottom */}
+      <button
+        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+        style={{ minHeight: 40, minWidth: 40 }}
+        onClick={() => setSettingsOpen(true)}
+      >
+        <IoSettingsOutline size={22} color="#9ca3af" />
+      </button>
+
+      <AddMember
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        onAdd={handleAddMember}
+      />
+      {selectedMember && (
+        <Member
+          isOpen={memberOpen}
+          onClose={() => setMemberOpen(false)}
+          groupCode={groupCode}
+          member={selectedMember}
+          onUpdate={onUpdate}
+          onUserDelete={onUserDelete}
+        />
+      )}
+      <Settings
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        groupCode={groupCode}
+        onLogout={onLogout}
+      />
+    </div>
+  );
 };
 
 export default Sidebar;
