@@ -92,7 +92,6 @@ function App() {
     const handler = () => refresh();
     socket.on("refresh", handler);
 
-    // Also re-join room on reconnect (Pi network drops)
     const onReconnect = () => {
       if (groupCode) socket.emit("join_group", { group_code: groupCode });
       refresh();
@@ -127,6 +126,7 @@ function App() {
         onUpdate={refresh}
         onUserDelete={refresh}
       />
+      {/* On mobile, Calendar takes full width since Sidebar is an overlay */}
       <div className="flex-1 min-w-0">
         <Calendar
           members={members}

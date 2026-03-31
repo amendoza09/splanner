@@ -74,11 +74,18 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
         return m === 0 ? `${h}${p}` : `${h}:${m.toString().padStart(2,'0')}${p}`;
     };
 
+    // Scroll to current time on mount
     useEffect(() => {
-        if (scrollRef.current && nowLineRef.current) {
-            nowLineRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-    }, [nowTop]);
+        const scrollToNow = () => {
+            if (scrollRef.current) {
+                const containerHeight = scrollRef.current.clientHeight;
+                const scrollTo = nowTop - containerHeight / 2;
+                scrollRef.current.scrollTop = Math.max(0, scrollTo);
+            }
+        };
+        const t = setTimeout(scrollToNow, 100);
+        return () => clearTimeout(t);
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 60000);
