@@ -80,3 +80,28 @@ export const getWeather = async() => {
   const res = await axios.get('https://api.weather.gov/gridpoints/GSP/80,35/forecast/hourly?units=us')
   return res.data;
 }
+
+export const getChores = async (groupCode) => {
+  try {
+    const res = await API.get(`/group/${groupCode}/chores`);
+    return res.data;
+  } catch (err) {
+    console.error("failed to fetch chores:", err);
+    return [];
+  }
+};
+
+export const addChore = async (groupCode, chore) => {
+  const res = await API.post(`/group/${groupCode}/chores`, chore);
+  return res.data;
+};
+
+export const toggleChore = async (choreId, completed) => {
+  const res = await API.patch(`/chores/${choreId}`, { completed });
+  return res.data;
+};
+
+export const deleteChore = async (choreId) => {
+  const res = await API.delete(`/chores/${choreId}`);
+  return res.data;
+};
