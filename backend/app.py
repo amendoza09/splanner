@@ -5,7 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
-from models import Group, User, Event
+from models import Group, User, Event, Chore
 from pydantic import BaseModel
 from datetime import datetime, timedelta, time
 from typing import Optional
@@ -324,3 +324,96 @@ async def update_user(
         "color": user.color,
         "group_id": user.group_id,
     }
+
+# ── Chores ────────────────────────────────────────────────────────────────────
+
+class ChoreCreate(BaseModel):
+    user_id: int
+    title: str
+    completed: bool = False
+
+class ChoreToggle(BaseModel):
+    completed: bool
+
+@_app.get("/group/{group_code}/chores")
+def get_chores(group_code: str, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.code == group_code).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    chores = db.query(Chore).filter(Chore.group_id == group.id).all()
+    return [
+        {
+            "chore_id": c.id,
+            "title": c.title,
+            "completed": c.completed,
+            "user_id": c.user_id,
+            "group_id": c.group_id,
+        }
+        for c in chores
+    ]
+
+@_app.post("/group/{group_code}/chores")
+async def add_chore(group_code: str, payload: ChoreCreate, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.code == group_code).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    user = db.query(User).filter(User.id == payload.user_id, User.group_id == group.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found in this group")
+
+    chore = Chore(
+        title=payload.title,
+        completed=payload.completed,
+        user_id=payload.user_id,
+        group_id=group.id,
+    )
+    db.add(chore)
+    db.commit()
+    db.refresh(chore)
+
+    await broadcast(group_code, "refresh", {"reason": "chore-added"})
+
+    return {
+        "chore_id": chore.id,
+        "title": chore.title,
+        "completed": chore.completed,
+        "user_id": chore.user_id,
+        "group_id": chore.group_id,
+    }
+
+@_app.patch("/chores/{chore_id}")
+async def toggle_chore(chore_id: int, payload: ChoreToggle, db: Session = Depends(get_db)):
+    chore = db.query(Chore).filter(Chore.id == chore_id).first()
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+
+    chore.completed = payload.completed
+    db.commit()
+    db.refresh(chore)
+
+    group = db.query(Group).filter(Group.id == chore.group_id).first()
+    if group:
+        await broadcast(group.code, "refresh", {"reason": "chore-toggled"})
+
+    return {
+        "chore_id": chore.id,
+        "title": chore.title,
+        "completed": chore.completed,
+        "user_id": chore.user_id,
+        "group_id": chore.group_id,
+    }
+
+@_app.delete("/chores/{chore_id}")
+async def delete_chore(chore_id: int, db: Session = Depends(get_db)):
+    chore = db.query(Chore).filter(Chore.id == chore_id).first()
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+
+    group = db.query(Group).filter(Group.id == chore.group_id).first()
+    db.delete(chore)
+    db.commit()
+
+    if group:
+        await broadcast(group.code, "refresh", {"reason": "chore-deleted"})
+
+    return "chore deleted"
