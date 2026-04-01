@@ -24,7 +24,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "electron-dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron . --enable-touch-events --touch-events=enabled\"",
-    "electron-prod": "cross-env NODE_OPTIONS=--max-old-space-size=4096 react-scripts build && electron ."
+    "electron-prod": "cross-env NODE_OPTIONS=--max-old-space-size=4096 react-scripts build && electron-builder ."
   },
   "build": {
     "appId": "com.toni.cloud",

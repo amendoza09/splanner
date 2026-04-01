@@ -5,27 +5,27 @@ const HOUR_HEIGHT = 50;
 const TOTAL_HOURS = 24;
 
 const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDeleteEvent }) => {
-    const [now, setNow] = useState(new Date());
-    const scrollRef = useRef(null);
-    const nowLineRef = useRef(null);
+  const [now, setNow] = useState(new Date());
+  const scrollRef = useRef(null);
+  const nowLineRef = useRef(null);
 
-    const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-    const currentDate = format(new Date(), 'yyyy-MM-dd');
-    const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
-    const nowTop = (minutesSinceMidnight / 60) * HOUR_HEIGHT;
+  const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
+  const currentDate = format(new Date(), 'yyyy-MM-dd');
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+  const nowTop = (minutesSinceMidnight / 60) * HOUR_HEIGHT;
 
-    const allEvents = members.flatMap(member =>
-        (member.events || []).map(event => {
-            const start = new Date(event.start_time);
-            const end = new Date(event.end_time);
-            return {
-                id: event.event_id,
-                title: event.title,
-                date: format(start, "yyyy-MM-dd"),
-                start_time: start,
-                end_time: end,
-                startMinutes: start.getHours() * 60 + start.getMinutes(),
-                endMinutes: end.getHours() * 60 + end.getMinutes(),
+  const allEvents = members.flatMap(member =>
+    (member.events || []).map(event => {
+      const start = new Date(event.start_time);
+      const end = new Date(event.end_time);
+      return {
+        id: event.event_id,
+        title: event.title,
+        date: format(start, "yyyy-MM-dd"),
+        start_time: start,
+        end_time: end,
+        startMinutes: start.getHours() * 60 + start.getMinutes(),
+        endMinutes: end.getHours() * 60 + end.getMinutes(),
                 member: member.name,
                 color: member.color,
                 notes: event.notes,
@@ -102,7 +102,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
             <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
 
                 {/* Row 1: day letter + date number */}
-                <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: '48px repeat(7, 1fr)' }}>
+                <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: '38px repeat(7, 1fr)' }}>
                     <div />
                     {weekDays.map((day, i) => {
                         const dateKey = format(day, 'yyyy-MM-dd');
@@ -123,8 +123,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
 
                 {/* Row 2: all-day tasks (only rendered if tasks exist this week) */}
                 {hasAnyTasks && (
-                    <div className="grid" style={{ gridTemplateColumns: '48px repeat(7, 1fr)' }}>
-                        <div className="flex items-center justify-end pr-1">
+                    <div className="grid" style={{ gridTemplateColumns: '38px repeat(7, 1fr)' }}>
+                        <div className="flex items-center justify-end pl-2">
                             <span className="text-[9px] text-gray-300 leading-none">all‑day</span>
                         </div>
                         {weekDays.map((day) => {
@@ -161,7 +161,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         <div
                             key={hour}
                             className="grid items-start"
-                            style={{ gridTemplateColumns: '48px repeat(7, 1fr)', height: HOUR_HEIGHT }}
+                            style={{ gridTemplateColumns: '38px repeat(7, 1fr)', height: HOUR_HEIGHT }}
                         >
                             <div className="text-[10px] text-gray-400 text-right pr-2 -mt-2 select-none">
                                 {formatHour(hour)}
@@ -177,7 +177,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         className="absolute top-0 left-0 right-0 pointer-events-none"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '48px repeat(7, 1fr)',
+                            gridTemplateColumns: '38px repeat(7, 1fr)',
                             height: TOTAL_HOURS * HOUR_HEIGHT,
                         }}
                     >
@@ -223,7 +223,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         className="absolute top-0 left-0 right-0 pointer-events-none"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '48px repeat(7, 1fr)',
+                            gridTemplateColumns: '38px repeat(7, 1fr)',
                             height: TOTAL_HOURS * HOUR_HEIGHT,
                         }}
                     >
