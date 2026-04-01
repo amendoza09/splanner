@@ -130,6 +130,7 @@ function App() {
       <div className="flex-1 min-w-0">
         <Calendar
           members={members}
+          groupCode={groupCode}
           onNewEvent={refresh}
           onDeleteEvent={refresh}
           onUpdate={refresh}
