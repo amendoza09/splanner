@@ -9,13 +9,14 @@ import WeeklyView from "./Weekly";
 import MonthlyView from "./Monthly";
 import AddEvent from './AddEvent';
 import EventCard from "./EventCard";
+import Chores from "./Chores";
 
 import defaultIcon from '../assets/sunny-day.png';
 import nightIcon from '../assets/night.png';
 import rainIcon from '../assets/rainy.png';
 import cloudyIcon from '../assets/icon.png';
 
-const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) => {
+const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) => {
   const [view, setView] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [addEventOpen, setAddEventOpen] = useState(false);
@@ -62,6 +63,14 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) =
           >
             <TbCalendarMonthFilled size={22} />
           </button>
+          <button
+            onClick={() => setView("chores")}
+            className={`p-2 rounded-lg text-lg ${view === "chores" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            style={{ minHeight: 36, minWidth: 36 }}
+            title="Chores"
+          >
+            ✓
+          </button>
         </div>
 
         {/* Weather + refresh */}
@@ -92,16 +101,21 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) =
             onDayPress={(day) => { setView("week"); setSelectedDate(day); }}
           />
         )}
+        {view === "chores" && (
+          <Chores members={members} groupCode={groupCode} />
+        )}
       </div>
 
-      {/* Floating add button */}
-      <button
-        onClick={() => setAddEventOpen(true)}
-        className="absolute bottom-5 right-5 opacity-90 active:scale-95 transition-transform"
-        style={{ minHeight: 'unset', minWidth: 'unset' }}
-      >
-        <IoAddCircle size={56} color="var(--green)" />
-      </button>
+      {/* Floating add button — hidden on chores tab */}
+      {view !== "chores" && (
+        <button
+          onClick={() => setAddEventOpen(true)}
+          className="absolute bottom-5 right-5 opacity-90 active:scale-95 transition-transform"
+          style={{ minHeight: 'unset', minWidth: 'unset' }}
+        >
+          <IoAddCircle size={56} color="var(--green)" />
+        </button>
+      )}
 
       <AddEvent
         isOpen={addEventOpen}
