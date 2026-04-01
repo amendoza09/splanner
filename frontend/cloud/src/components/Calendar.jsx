@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { TbCalendarMonthFilled } from "react-icons/tb";
 import { MdCalendarViewWeek } from "react-icons/md";
 import { IoAddCircle } from "react-icons/io5";
-import { IoMdRefresh } from "react-icons/io";
 
 import { getWeather } from "../api";
 
@@ -46,7 +45,7 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) =
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       {/* Compact toolbar — single row */}
-      <div className="flex items-center justify-between px-3 py-1 border-b border-gray-200 bg-white" style={{ height: 48 }}>
+      <div className="flex items-center justify-between pl-14 pr-3 md:px-3 py-1 border-b border-gray-200 bg-white" style={{ height: 48 }}>
         {/* View toggles */}
         <div className="flex gap-1">
           <button
@@ -67,9 +66,6 @@ const Calendar = ({ members, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) =
 
         {/* Weather + refresh */}
         <div className="flex items-center gap-2">
-          <button onClick={onRefresh} className="p-1 rounded hover:bg-gray-100" style={{ minHeight: 36, minWidth: 36 }}>
-            <IoMdRefresh size={18} />
-          </button>
           {temp && (
             <div className="flex items-center gap-1">
               <span className="text-sm text-gray-500">{temp}</span>
