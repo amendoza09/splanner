@@ -76,10 +76,25 @@ export const updateEvent = async(userID, eventID, updatedPayload) => {
   return res.data;
 }
 
-export const getWeather = async() => {
-  const res = await axios.get('https://api.weather.gov/gridpoints/GSP/80,35/forecast/hourly?units=us')
-  return res.data;
-}
+export const getWeather = async () => {
+  // 1. Get user's coordinates from browser
+  const position = await new Promise((resolve, reject) =>
+    navigator.geolocation.getCurrentPosition(resolve, reject)
+  );
+
+  const { latitude, longitude } = position.coords;
+
+  // 2. Convert lat/lng to a weather.gov grid point
+  const pointRes = await axios.get(`https://api.weather.gov/points/${latitude},${longitude}`);
+  const { gridId, gridX, gridY } = pointRes.data.properties;
+
+  // 3. Fetch hourly forecast for that grid point
+  const forecastRes = await axios.get(
+    `https://api.weather.gov/gridpoints/${gridId}/${gridX},${gridY}/forecast/hourly?units=us`
+  );
+
+  return forecastRes.data;
+};
 
 export const getChores = async (groupCode) => {
   try {
