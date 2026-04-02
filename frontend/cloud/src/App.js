@@ -6,7 +6,7 @@ import { io } from "socket.io-client";
 
 import { getGroupByCode, createGroup } from './api';
 
-const SOCKET_URL = "https://cloud-ktc9.onrender.com";
+const SOCKET_URL = process.env.REACT_APP_API_URL;
 const socket = io(SOCKET_URL, {
   reconnection: true,
   reconnectionAttempts: Infinity,
