@@ -231,7 +231,3 @@ The backend broadcasts Socket.IO `refresh` events to all clients in a group room
 | Chore added/toggled/deleted | `chore-added`, `chore-toggled`, `chore-deleted` |
 
 ---
-
-## License
-
-MIT
