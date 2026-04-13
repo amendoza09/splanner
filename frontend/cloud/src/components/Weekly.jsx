@@ -124,19 +124,19 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                 {/* Row 2: all-day tasks (only rendered if tasks exist this week) */}
                 {hasAnyTasks && (
                     <div className="grid" style={{ gridTemplateColumns: '38px repeat(7, 1fr)' }}>
-                        <div className="flex items-center justify-end pl-2">
+                        <div className="flex items-center justify-end pr-2">
                             <span className="text-[9px] text-gray-300 leading-none">all‑day</span>
                         </div>
                         {weekDays.map((day) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const tasks = tasksByDate[dateKey] || [];
                             return (
-                                <div key={dateKey} className="flex flex-col gap-0.5 px-0.5 py-1 min-h-[24px]">
+                                <div key={dateKey} className="flex flex-col gap-0.5 px-1 py-1 min-h-[15px]">
                                     {tasks.map((task) => (
                                         <button
                                             key={task.id}
                                             onClick={() => { onEventOpen(true); onSelectedEvent(task); }}
-                                            className="w-full text-[10px] font-medium text-center rounded px-1 leading-5 truncate opacity-80"
+                                            className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80"
                                             style={{ backgroundColor: task.color }}
                                         >
                                             {task.title}
