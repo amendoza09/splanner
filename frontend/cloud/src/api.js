@@ -76,26 +76,51 @@ export const updateEvent = async(userID, eventID, updatedPayload) => {
   return res.data;
 }
 
-export const getWeather = async () => {
-  // 1. Get user's coordinates from browser
-  const position = await new Promise((resolve, reject) =>
+const COORDS_KEY  = "weather_coords";
+const GRID_KEY    = "weather_grid"; 
+
+const requestCoords = () =>
+  new Promise((resolve, reject) =>
     navigator.geolocation.getCurrentPosition(resolve, reject)
   );
-
-  const { latitude, longitude } = position.coords;
-
-  // 2. Convert lat/lng to a weather.gov grid point
-  const pointRes = await axios.get(`https://api.weather.gov/points/${latitude},${longitude}`);
-  const { gridId, gridX, gridY } = pointRes.data.properties;
-
-  // 3. Fetch hourly forecast for that grid point
-  const forecastRes = await axios.get(
+ 
+const getCachedOrRequestCoords = async () => {
+  const cached = localStorage.getItem(COORDS_KEY);
+  if (cached) return JSON.parse(cached);
+ 
+  // First time — prompt for permission and cache the result
+  const position = await requestCoords();
+  const coords = {
+    lat: position.coords.latitude,
+    lon: position.coords.longitude,
+  };
+  localStorage.setItem(COORDS_KEY, JSON.stringify(coords));
+  return coords;
+};
+const getGrid = async (lat, lon) => {
+  const cached = localStorage.getItem(GRID_KEY);
+  if (cached) return JSON.parse(cached);
+ 
+  // NWS points API resolves lat/lon → gridId, gridX, gridY
+  const res = await axios.get(`https://api.weather.gov/points/${lat},${lon}`);
+  const { gridId, gridX, gridY } = res.data.properties;
+  const grid = { gridId, gridX, gridY };
+  localStorage.setItem(GRID_KEY, JSON.stringify(grid));
+  return grid;
+};export const getWeather = async () => {
+  const { lat, lon } = await getCachedOrRequestCoords();
+  const { gridId, gridX, gridY } = await getGrid(lat, lon);
+  const res = await axios.get(
     `https://api.weather.gov/gridpoints/${gridId}/${gridX},${gridY}/forecast/hourly?units=us`
   );
-
-  return forecastRes.data;
+  return res.data;
 };
-
+ 
+// Call this to reset location (e.g. from Settings if the Pi moves)
+export const clearCachedLocation = () => {
+  localStorage.removeItem(COORDS_KEY);
+  localStorage.removeItem(GRID_KEY);
+};
 export const getChores = async (groupCode) => {
   try {
     const res = await API.get(`/group/${groupCode}/chores`);
