@@ -92,6 +92,60 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
         return () => clearInterval(interval);
     }, []);
 
+    function layoutEvents(events) {
+        const sorted = [...events].sort((a, b) => a.startMinutes - b.startMinutes);
+
+        const overlaps = (a, b) => a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
+
+        // Build clusters via union-find style grouping
+        const clusters = [];
+        for (const event of sorted) {
+            const touching = clusters.filter(c => c.some(e => overlaps(e, event)));
+            if (touching.length === 0) {
+            clusters.push([event]);
+            } else {
+            // Merge all touching clusters together
+            const merged = touching.flat();
+            merged.push(event);
+            touching.forEach(c => clusters.splice(clusters.indexOf(c), 1));
+            clusters.push(merged);
+            }
+        }
+
+        // Within each cluster, assign columns greedily
+        const result = [];
+        for (const cluster of clusters) {
+            const cols = [];
+            for (const event of cluster) {
+            let placed = false;
+            for (let col = 0; col < cols.length; col++) {
+                if (!cols[col].some(e => overlaps(e, event))) {
+                cols[col].push(event);
+                result.push({ ...event, col, totalCols: cols.length }); // totalCols updated below
+                placed = true;
+                break;
+                }
+            }
+            if (!placed) {
+                cols.push([event]);
+                result.push({ ...event, col: cols.length - 1, totalCols: cols.length });
+            }
+            }
+            // Now we know the real totalCols for this cluster — patch it
+            const clusterIds = new Set(cluster.map(e => e.id));
+            const finalCols = cols.length;
+            result.forEach(e => {
+            if (clusterIds.has(e.id)) e.totalCols = finalCols;
+            });
+        }
+
+        return result.map(e => ({
+            ...e,
+            width: 1 / e.totalCols,
+            left: e.col / e.totalCols,
+        }));
+    }
+
     const weekDays = generateWeekDays(selectedDate ? new Date(selectedDate) : new Date());
     const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
 
@@ -185,9 +239,10 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         {weekDays.map((day) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const dayEvents = agendaEvents[dateKey] || [];
+                            const laidOut = layoutEvents(dayEvents);
                             return (
                                 <div key={dateKey} className="relative pointer-events-auto">
-                                    {dayEvents.map((event) => {
+                                    {laidOut.map((event) => {
                                         const top = (event.startMinutes / 60) * HOUR_HEIGHT;
                                         const height = Math.max(
                                             ((event.endMinutes - event.startMinutes) / 60) * HOUR_HEIGHT,
@@ -197,8 +252,13 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                             <button
                                                 key={event.id}
                                                 onClick={() => { onEventOpen(true); onSelectedEvent(event); }}
-                                                className="absolute inset-x-0.5 rounded-md text-left overflow-hidden opacity-80"
-                                                style={{ top, height, backgroundColor: event.color }}
+                                                className="absolute rounded-md text-left overflow-hidden opacity-80"
+                                                style={{
+                                                    top, height,
+                                                    backgroundColor: event.color,
+                                                    width: `calc(${event.width * 100}% - 2px)`,
+                                                    left: `calc(${event.left * 100}%)`,
+                                                }}
                                             >
                                                 <div className="px-1 pt-0.5">
                                                     <div className="text-[10px] font-semibold leading-tight text-center truncate">
