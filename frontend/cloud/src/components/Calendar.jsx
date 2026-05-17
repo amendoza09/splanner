@@ -15,6 +15,7 @@ import defaultIcon from '../assets/sunny-day.png';
 import nightIcon from '../assets/night.png';
 import rainIcon from '../assets/rainy.png';
 import cloudyIcon from '../assets/icon.png';
+import icon from '../assets/icon.png';
 
 const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) => {
   const [view, setView] = useState("week");
@@ -46,7 +47,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       {/* Compact toolbar — single row */}
-      <div className="flex items-center justify-between pl-14 pr-3 md:px-3 py-1 border-b border-gray-200 bg-white" style={{ height: 48 }}>
+      <div className="flex items-center justify-between pl-14 pr-3 md:px-5 py-1 border-b border-gray-200 bg-white" style={{ height: 48 }}>
         {/* View toggles */}
         <div className="flex gap-1">
           <button
@@ -73,15 +74,23 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
           </button>
         </div>
 
-        {/* Weather + refresh */}
-        <div className="flex items-center gap-2">
-          {temp && (
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-500">{temp}</span>
-              {weatherIcon && <img className="w-5 h-5 opacity-60" src={weatherIcon} alt="" />}
-            </div>
-          )}
+        <div className="flex flex-row gap-5">
+          {/* Weather + refresh */}
+          <div className="flex">
+            {temp && (
+              <div className="flex gap-2">
+                <span className="text-sm text-gray-500">{temp}</span>
+                {weatherIcon && <img className="w-5 h-5 opacity-60" src={weatherIcon} alt="" />}
+              </div>
+            )}
+          </div>
+
+          {/* icon */}
+          <div>
+            <img className="h-[20px]" src={icon}/>
+          </div>
         </div>
+        
       </div>
 
       {/* Calendar view — fills remaining height */}
@@ -110,7 +119,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
       {view !== "chores" && (
         <button
           onClick={() => setAddEventOpen(true)}
-          className="absolute bottom-5 right-5 opacity-90 active:scale-95 transition-transform"
+          className="absolute bottom-8 right-8 opacity-90 active:scale-95 transition-transform"
           style={{ minHeight: 'unset', minWidth: 'unset' }}
         >
           <IoAddCircle size={56} color="var(--green)" />
