@@ -1,39 +1,182 @@
 import { useState } from 'react';
+import logo from '../assets/splanner-logo.png';
 
 const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, statusCode }) => {
   const [code, setCode] = useState("");
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center gap-10 bg-white px-8">
-      {/* Join */}
-      <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-        <h1 className="text-lg font-bold text-gray-800">Enter Group Code</h1>
+    <div style={{
+      minHeight: '100vh',
+      width: '100vw',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#f7f7f5',
+      fontFamily: "'DM Sans', sans-serif",
+      padding: '2rem',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+        .login-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          max-width: 320px;
+        }
+
+        .logo-wrap {
+          margin-bottom: 3rem;
+        }
+
+        .logo-wrap img {
+          height: 44px;
+          object-fit: contain;
+        }
+
+        .code-input {
+          width: 100%;
+          border: none;
+          border-bottom: 2px solid #e0e0e0;
+          padding: 12px 0;
+          text-align: center;
+          font-size: 24px;
+          font-family: 'DM Mono', 'Courier New', monospace;
+          font-weight: 500;
+          letter-spacing: 0.3em;
+          color: #1a1a1a;
+          background: transparent;
+          outline: none;
+          transition: border-color 0.2s;
+          box-sizing: border-box;
+        }
+
+        .code-input:focus {
+          border-color: #1a1a1a;
+        }
+
+        .code-input::placeholder {
+          color: #d4d4d4;
+          letter-spacing: 0.25em;
+        }
+
+        .error-msg {
+          font-size: 12px;
+          color: #e05252;
+          margin-top: 8px;
+          text-align: center;
+          width: 100%;
+        }
+
+        .btn-join {
+          width: 100%;
+          padding: 15px;
+          border-radius: 100px;
+          border: none;
+          background: var(--green, #6cc86a);
+          color: #fff;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 2rem;
+          transition: opacity 0.15s, transform 0.1s;
+        }
+
+        .btn-join:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+
+        .btn-join:not(:disabled):active { transform: scale(0.98); }
+        .btn-join:not(:disabled):hover { opacity: 0.88; }
+
+        .or-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          margin: 2rem 0;
+        }
+
+        .or-line {
+          flex: 1;
+          height: 1px;
+          background: #e8e8e8;
+        }
+
+        .or-text {
+          font-size: 12px;
+          color: #bbb;
+          font-weight: 500;
+        }
+
+        .btn-create {
+          width: 100%;
+          padding: 15px;
+          border-radius: 100px;
+          border: 1.5px solid #ddd;
+          background: transparent;
+          color: #8b4cf7;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: border-color 0.15s, transform 0.1s;
+        }
+
+        .btn-create:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+
+        .btn-create:not(:disabled):active { transform: scale(0.98); }
+        .btn-create:not(:disabled):hover { border-color: #c4a0f5; }
+      `}</style>
+
+      <div className="login-wrap">
+
+        <div className="">
+          <img src={logo} alt="Logo" className="h-[15rem]"/>
+        </div>
+
         <input
-          className="border-2 border-gray-300 rounded-xl px-4 py-3 w-full text-center text-xl font-mono tracking-widest focus:outline-none focus:border-gray-500 uppercase"
+          className="code-input"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="XXXXX"
           maxLength={5}
+          autoCapitalize="characters"
+          spellCheck={false}
         />
-        {statusCode === 404 && <p className="text-red-500 text-sm">Group not found</p>}
+        {statusCode === 404 && (
+          <p className="error-msg">No group found with that code</p>
+        )}
+
         <button
+          className="btn-join"
           onClick={() => onSubmit(code)}
-          disabled={loadingJoin || !code}
-          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold text-base disabled:opacity-50 active:scale-98 transition-all"
+          disabled={loadingJoin || code.length < 5}
         >
           {loadingJoin ? "Joining…" : "Join Group"}
         </button>
-      </div>
 
-      <div className="w-full max-w-xs flex flex-col items-center gap-3">
-        <p className="text-sm text-gray-400">Don't have a code?</p>
+        <div className="or-row">
+          <div className="or-line" />
+          <span className="or-text">or</span>
+          <div className="or-line" />
+        </div>
+
         <button
+          className="btn-create"
           onClick={onCreateGroup}
           disabled={loadingCreate}
-          className="w-full py-3 rounded-xl bg-[#b370fa] text-white font-semibold text-base disabled:opacity-50 active:scale-98 transition-all"
         >
           {loadingCreate ? "Creating…" : "Create New Group"}
         </button>
+
       </div>
     </div>
   );
