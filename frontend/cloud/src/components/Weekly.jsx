@@ -35,28 +35,24 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
         })
     );
 
-    const tasksByDate = allEvents
-        .filter(e => e.is_task)
-        .reduce((acc, task) => {
-            const key = format(new Date(task.start_time), "yyyy-MM-dd");
-            acc[key] = acc[key] || [];
-            acc[key].push(task);
-            return acc;
-        }, {});
+    const tasksByDate = allEvents.filter(e => e.is_task).reduce((acc, task) => {
+        const key = format(new Date(task.start_time), "yyyy-MM-dd");
+        acc[key] = acc[key] || [];
+        acc[key].push(task);
+        return acc;
+    }, {});
 
-    const agendaEvents = allEvents
-        .filter(e => !e.is_task)
-        .reduce((acc, event) => {
+    const agendaEvents = allEvents.filter(e => !e.is_task).reduce((acc, event) => {
             const key = format(new Date(event.start_time), "yyyy-MM-dd");
             acc[key] = acc[key] || [];
             acc[key].push(event);
             return acc;
-        }, {});
+    }, {});
 
     const generateWeekDays = (date) => {
-        const start = startOfWeek(date, { weekStartsOn: 0 });
-        const end = endOfWeek(date, { weekStartsOn: 0 });
-        return eachDayOfInterval({ start, end });
+      const start = startOfWeek(date, { weekStartsOn: 0 });
+      const end = endOfWeek(date, { weekStartsOn: 0 });
+      return eachDayOfInterval({ start, end });
     };
 
     const formatHour = (hour) => {
@@ -185,12 +181,12 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const tasks = tasksByDate[dateKey] || [];
                             return (
-                                <div key={dateKey} className="flex flex-col gap-0.5 px-0.5 py-1 min-h-[35px]">
+                                <div key={dateKey} className="flex flex-col gap-0.5 px-0.5 py-1 min-h-[35px] min-w-0">
                                     {tasks.map((task) => (
                                         <button
                                             key={task.id}
                                             onClick={() => { onEventOpen(true); onSelectedEvent(task); }}
-                                            className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80 min-h-[35px]"
+                                            className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80 min-h-[35px] min-w-0"
                                             style={{ backgroundColor: task.color }}
                                         >
                                             {task.title}
@@ -241,36 +237,34 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             const dayEvents = agendaEvents[dateKey] || [];
                             const laidOut = layoutEvents(dayEvents);
                             return (
-                                <div key={dateKey} className="relative pointer-events-auto">
-                                    {laidOut.map((event) => {
-                                        const top = (event.startMinutes / 60) * HOUR_HEIGHT;
-                                        const height = Math.max(
-                                            ((event.endMinutes - event.startMinutes) / 60) * HOUR_HEIGHT,
-                                            20
-                                        );
-                                        return (
-                                            <button
-                                                key={event.id}
-                                                onClick={() => { onEventOpen(true); onSelectedEvent(event); }}
-                                                className="absolute rounded-md text-left overflow-hidden opacity-80"
-                                                style={{
-                                                    top, height,
-                                                    backgroundColor: event.color,
-                                                    width: `calc(${event.width * 100}% - 2px)`,
-                                                    left: `calc(${event.left * 100}%)`,
-                                                }}
-                                            >
-                                                <div className="px-1 pt-0.5">
-                                                    <div className="text-[10px] font-semibold leading-tight text-center truncate">
-                                                        {event.title}
-                                                    </div>
-                                                    {height > 28 && (
-                                                        <div className="text-[9px] leading-tight opacity-75 text-center truncate">
-                                                            {formatEventTime(event.start_time)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </button>
+                              <div key={dateKey} className="relative pointer-events-auto">
+                                {laidOut.map((event) => {
+                                  const top = (event.startMinutes / 60) * HOUR_HEIGHT;
+                                  const height = Math.max(
+                                    ((event.endMinutes - event.startMinutes) / 60) * HOUR_HEIGHT,20);
+                                      return (
+                                        <button
+                                          key={event.id}
+                                          onClick={() => { onEventOpen(true); onSelectedEvent(event); }}
+                                          className="absolute rounded-md text-left overflow-hidden opacity-80 min-w-0"
+                                          style={{
+                                            top, height,
+                                            backgroundColor: event.color,
+                                            width: `calc(${event.width * 100}% - 2px)`,
+                                            left: `calc(${event.left * 100}%)`,
+                                          }}
+                                        >
+                                          <div className="px-1 pt-0.5 min-w-0 w-full">
+                                            <div className="text-[10px] font-semibold leading-tight text-center truncate min-w-0 w-full">
+                                              {event.title}
+                                            </div>
+                                            {height > 28 && (
+                                              <div className="text-[9px] leading-tight opacity-75 text-center truncate min-w-0 w-full">
+                                                {formatEventTime(event.start_time)}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </button>
                                         );
                                     })}
                                 </div>
@@ -311,7 +305,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                 </div>
             </div>
         </div>
-    );
+  );
 };
 
 export default WeeklyView;
