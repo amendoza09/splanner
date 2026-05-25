@@ -33,120 +33,120 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                 user_id: member.user_id,
             };
         })
-    );
+  );
 
-    const tasksByDate = allEvents.filter(e => e.is_task).reduce((acc, task) => {
+  const tasksByDate = allEvents.filter(e => e.is_task).reduce((acc, task) => {
         const key = format(new Date(task.start_time), "yyyy-MM-dd");
         acc[key] = acc[key] || [];
         acc[key].push(task);
         return acc;
-    }, {});
+  }, {});
 
-    const agendaEvents = allEvents.filter(e => !e.is_task).reduce((acc, event) => {
+  const agendaEvents = allEvents.filter(e => !e.is_task).reduce((acc, event) => {
             const key = format(new Date(event.start_time), "yyyy-MM-dd");
             acc[key] = acc[key] || [];
             acc[key].push(event);
             return acc;
-    }, {});
+  }, {});
 
-    const generateWeekDays = (date) => {
+  const generateWeekDays = (date) => {
       const start = startOfWeek(date, { weekStartsOn: 0 });
       const end = endOfWeek(date, { weekStartsOn: 0 });
       return eachDayOfInterval({ start, end });
-    };
+  };
 
-    const formatHour = (hour) => {
+  const formatHour = (hour) => {
         if (hour === 0) return "12a";
         if (hour < 12) return `${hour}a`;
         if (hour === 12) return "12p";
         return `${hour - 12}p`;
-    };
+  };
 
-    const formatEventTime = (date) => {
+  const formatEventTime = (date) => {
         let h = date.getHours();
         const m = date.getMinutes();
         const p = h >= 12 ? 'p' : 'a';
         h = h % 12 || 12;
         return m === 0 ? `${h}${p}` : `${h}:${m.toString().padStart(2,'0')}${p}`;
-    };
+  };
 
     // Scroll to current time on mount
-    useEffect(() => {
-        const scrollToNow = () => {
+  useEffect(() => {
+    const scrollToNow = () => {
             if (scrollRef.current) {
                 const containerHeight = scrollRef.current.clientHeight;
                 const scrollTo = nowTop - containerHeight / 2;
                 scrollRef.current.scrollTop = Math.max(0, scrollTo);
             }
-        };
-        const t = setTimeout(scrollToNow, 100);
-        return () => clearTimeout(t);
-    }, []);
+    };
+    const t = setTimeout(scrollToNow, 100);
+    return () => clearTimeout(t);
+  }, []);
 
-    useEffect(() => {
+  useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 60000);
         return () => clearInterval(interval);
-    }, []);
+  }, []);
 
-    function layoutEvents(events) {
-        const sorted = [...events].sort((a, b) => a.startMinutes - b.startMinutes);
+  function layoutEvents(events) {
+    const sorted = [...events].sort((a, b) => a.startMinutes - b.startMinutes);
 
-        const overlaps = (a, b) => a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
+    const overlaps = (a, b) => a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
 
-        // Build clusters via union-find style grouping
-        const clusters = [];
-        for (const event of sorted) {
-            const touching = clusters.filter(c => c.some(e => overlaps(e, event)));
-            if (touching.length === 0) {
-            clusters.push([event]);
-            } else {
-            // Merge all touching clusters together
-            const merged = touching.flat();
-            merged.push(event);
-            touching.forEach(c => clusters.splice(clusters.indexOf(c), 1));
-            clusters.push(merged);
-            }
+    // Build clusters via union-find style grouping
+    const clusters = [];
+    for (const event of sorted) {
+      const touching = clusters.filter(c => c.some(e => overlaps(e, event)));
+      if (touching.length === 0) {
+        clusters.push([event]);
+      } else {
+        // Merge all touching clusters together
+        const merged = touching.flat();
+        merged.push(event);
+        touching.forEach(c => clusters.splice(clusters.indexOf(c), 1));
+        clusters.push(merged);
         }
+      }
 
-        // Within each cluster, assign columns greedily
-        const result = [];
-        for (const cluster of clusters) {
-            const cols = [];
-            for (const event of cluster) {
-            let placed = false;
-            for (let col = 0; col < cols.length; col++) {
-                if (!cols[col].some(e => overlaps(e, event))) {
-                cols[col].push(event);
-                result.push({ ...event, col, totalCols: cols.length }); // totalCols updated below
-                placed = true;
-                break;
-                }
+      // Within each cluster, assign columns greedily
+      const result = [];
+      for (const cluster of clusters) {
+        const cols = [];
+        for (const event of cluster) {
+          let placed = false;
+          for (let col = 0; col < cols.length; col++) {
+            if (!cols[col].some(e => overlaps(e, event))) {
+              cols[col].push(event);
+              result.push({ ...event, col, totalCols: cols.length }); // totalCols updated below
+              placed = true;
+              break;
             }
-            if (!placed) {
-                cols.push([event]);
-                result.push({ ...event, col: cols.length - 1, totalCols: cols.length });
-            }
-            }
-            // Now we know the real totalCols for this cluster — patch it
-            const clusterIds = new Set(cluster.map(e => e.id));
-            const finalCols = cols.length;
-            result.forEach(e => {
-            if (clusterIds.has(e.id)) e.totalCols = finalCols;
-            });
+          }
+          if (!placed) {
+            cols.push([event]);
+            result.push({ ...event, col: cols.length - 1, totalCols: cols.length });
+          }
         }
+        // Now we know the real totalCols for this cluster — patch it
+        const clusterIds = new Set(cluster.map(e => e.id));
+        const finalCols = cols.length;
+        result.forEach(e => {
+          if (clusterIds.has(e.id)) e.totalCols = finalCols;
+        });
+      }
 
-        return result.map(e => ({
-            ...e,
-            width: 1 / e.totalCols,
-            left: e.col / e.totalCols,
-        }));
-    }
+      return result.map(e => ({
+        ...e,
+        width: 1 / e.totalCols,
+        left: e.col / e.totalCols,
+      }));
+  }
 
-    const weekDays = generateWeekDays(selectedDate ? new Date(selectedDate) : new Date());
-    const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
+  const weekDays = generateWeekDays(selectedDate ? new Date(selectedDate) : new Date());
+  const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
 
-    return (
-        <div className="h-[95vh] flex flex-col overflow-hidden bg-white">
+  return (
+    <div className="h-[93vh] flex flex-col overflow-hidden bg-white mb-[1rem]">
 
             {/* ── Sticky header ── */}
             <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
