@@ -86,14 +86,31 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent }) => {
               <label className="text-xs text-gray-500 mb-1 block">Start</label>
               <input type="datetime-local"
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                value={startTime} 
+                onChange={(e) => {
+                const val = e.target.value;
+                setStartTime(val);
+                // Auto-set end time to 1 hour after start
+                if (val) {
+                  const start = new Date(val);
+                  start.setHours(start.getHours() + 1);
+                  const padded = start.toISOString().slice(0, 16); // "yyyy-MM-ddTHH:mm"
+                  setEndTime(padded);
+                }
+              }}
               />
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">End</label>
               <input type="datetime-local"
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={endTime} onChange={(e) => setEndTime(e.target.value)}
+                min={startTime}
+                value={endTime} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (startTime && new Date(val) <= new Date(startTime)) return; // block invalid
+                  setEndTime(val);
+                }}
               />
             </div>
           </>
