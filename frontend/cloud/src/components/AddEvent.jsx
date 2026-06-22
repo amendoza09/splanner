@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { addEventToUser } from '../api';
 
-const AddEvent = ({ isOpen, onClose, members, onNewEvent }) => {
+const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -25,7 +25,7 @@ const AddEvent = ({ isOpen, onClose, members, onNewEvent }) => {
     if (isTask && new Date(taskEndDate) < new Date(taskStartDate)) { alert("End date before start"); return; }
     if (!isTask && new Date(endTime) < new Date(startTime)) { alert("End time before start"); return; }
     try {
-      await addEventToUser(selectedMember.user_id, {
+      await addEventToUser(groupCode, selectedMember.user_id, {
         title,
         is_task: isTask,
         start_time: isTask ? `${taskStartDate}T00:00:00` : `${startTime}:00`,
