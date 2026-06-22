@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { deleteEvent, updateEvent } from "../api";
 import { FaRegTrashAlt, FaRegEdit } from "react-icons/fa";
 
-const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members }) => {
+const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupCode }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -26,7 +26,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members }) => {
   if (!isOpen) return null;
 
   const deleteAnEvent = async () => {
-    try { await deleteEvent(event.user_id, event.id); onDelete?.(); onClose(); }
+    try { await deleteEvent(groupCode, event.user_id, event.id); onDelete?.(); onClose(); }
     catch (err) { console.error("Failed to delete event", err); }
   };
 
@@ -37,7 +37,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members }) => {
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
     };
 
-    await updateEvent(event.user_id, event.id, {
+    await updateEvent(groupCode, event.user_id, event.id, {
       title,
       start_time: toISOLocal(startTime),
       end_time: toISOLocal(endTime),

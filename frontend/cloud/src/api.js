@@ -39,16 +39,16 @@ export const addUserToGroup = async (groupCode, member) => {
   return res.data;
 };
 
-export const addEventToUser = async (userId, event) => {
+export const addEventToUser = async (groupCode, userId, event) => {
   try{
-    const res = await API.post(`/members/${userId}/events`, event);
+    const res = await API.post(`/members/${userId}/events`, event, { params: { group_code: groupCode } });
     socket.emit("event-added", res.data);
 
     return res.data
   } catch (err) {
     console.error("failed to create event", err);
   }
-  
+
 };
 
 export const createGroup = async () => {
@@ -61,18 +61,18 @@ export const updateUser = async(groupCode, userID, updatedPayload) => {
   return res.data
 }
 
-export const deleteUser = async(user_id) => {
-  const res = await API.delete(`/members/${user_id}`)
+export const deleteUser = async(groupCode, user_id) => {
+  const res = await API.delete(`/members/${user_id}`, { params: { group_code: groupCode } })
   return res.data;
 }
 
-export const deleteEvent = async(user_id, event_id) => {
-  const res = await API.delete(`/members/${user_id}/events/${event_id}`)
+export const deleteEvent = async(groupCode, user_id, event_id) => {
+  const res = await API.delete(`/members/${user_id}/events/${event_id}`, { params: { group_code: groupCode } })
   return res.data;
 }
 
-export const updateEvent = async(userID, eventID, updatedPayload) => {
-  const res = await API.patch(`/members/${userID}/events/${eventID}`, updatedPayload)
+export const updateEvent = async(groupCode, userID, eventID, updatedPayload) => {
+  const res = await API.patch(`/members/${userID}/events/${eventID}`, updatedPayload, { params: { group_code: groupCode } })
   return res.data;
 }
 
@@ -136,12 +136,12 @@ export const addChore = async (groupCode, chore) => {
   return res.data;
 };
 
-export const toggleChore = async (choreId, completed) => {
-  const res = await API.patch(`/chores/${choreId}`, { completed });
+export const toggleChore = async (groupCode, choreId, completed) => {
+  const res = await API.patch(`/chores/${choreId}`, { completed }, { params: { group_code: groupCode } });
   return res.data;
 };
 
-export const deleteChore = async (choreId) => {
-  const res = await API.delete(`/chores/${choreId}`);
+export const deleteChore = async (groupCode, choreId) => {
+  const res = await API.delete(`/chores/${choreId}`, { params: { group_code: groupCode } });
   return res.data;
 };

@@ -19,7 +19,7 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
   };
 
   const deleteAUser = async () => {
-    try { await deleteUser(member.user_id); onUserDelete(); }
+    try { await deleteUser(groupCode, member.user_id); onUserDelete(); }
     catch (e) { alert("Could not delete user"); }
   };
 

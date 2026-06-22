@@ -4,9 +4,10 @@ import random
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import IntegrityError
 from database import get_db
 from models import Group, User, Event, Chore
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime, timedelta, time
 from typing import Optional
 from dotenv import load_dotenv
@@ -23,7 +24,7 @@ _app = FastAPI()
 _app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -69,12 +70,25 @@ def generate_unique_code(db: Session) -> str:
         if not db.query(Group).filter(Group.code == code).first():
             return code
 
-def get_group_code_for_user(user_id: int, db: Session) -> str | None:
+def verify_group_code(user_id: int, group_code: str, db: Session) -> User:
+    """Fetch the user and confirm group_code is the one for their group, else 403/404."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        return None
+        raise HTTPException(status_code=404, detail="User not found")
     group = db.query(Group).filter(Group.id == user.group_id).first()
-    return group.code if group else None
+    if not group or group.code != group_code:
+        raise HTTPException(status_code=403, detail="Invalid group code for this user")
+    return user
+
+def verify_chore_group_code(chore_id: int, group_code: str, db: Session) -> Chore:
+    """Fetch the chore and confirm group_code is the one for its group, else 403/404."""
+    chore = db.query(Chore).filter(Chore.id == chore_id).first()
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    group = db.query(Group).filter(Group.id == chore.group_id).first()
+    if not group or group.code != group_code:
+        raise HTTPException(status_code=403, detail="Invalid group code for this chore")
+    return chore
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -114,12 +128,20 @@ def get_group(group_code: str, db: Session = Depends(get_db)):
 
 @_app.post("/group")
 def create_group(db: Session = Depends(get_db)):
-    code = generate_unique_code(db)
-    new_group = Group(code=code)
-    db.add(new_group)
-    db.commit()
-    db.refresh(new_group)
-    return {"group_id": new_group.id, "group_code": new_group.code}
+    # generate_unique_code only checks-then-acts, so a concurrent request can still
+    # grab the same code first; retry on the resulting unique-constraint violation.
+    for _ in range(5):
+        code = generate_unique_code(db)
+        new_group = Group(code=code)
+        db.add(new_group)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            continue
+        db.refresh(new_group)
+        return {"group_id": new_group.id, "group_code": new_group.code}
+    raise HTTPException(status_code=500, detail="Could not generate a unique group code")
 
 @_app.get("/group/{group_code}/members")
 def get_group_members(group_code: str, db: Session = Depends(get_db)):
@@ -136,24 +158,30 @@ def get_group_members(group_code: str, db: Session = Depends(get_db)):
 
 # ── Events ────────────────────────────────────────────────────────────────────
 
+MAX_EVENT_SPAN_DAYS = 366
+
 class EventCreate(BaseModel):
-    title: str
+    title: str = Field(..., max_length=200)
     start_time: datetime | None = None
     end_time: datetime | None = None
     is_task: bool = False
-    notes: str | None = None
+    notes: str | None = Field(None, max_length=2000)
 
 @_app.post("/members/{user_id}/events")
-async def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+async def add_event(user_id: int, event: EventCreate, group_code: str, db: Session = Depends(get_db)):
+    user = verify_group_code(user_id, group_code, db)
 
     created_events = []
     start = event.start_time
     end = event.end_time
     current_day = start.date()
     last_day = end.date()
+
+    if (last_day - current_day).days > MAX_EVENT_SPAN_DAYS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Event span cannot exceed {MAX_EVENT_SPAN_DAYS} days",
+        )
 
     while current_day <= last_day:
         day_start = start if current_day == start.date() else datetime.combine(current_day, time.min)
@@ -178,9 +206,7 @@ async def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_
     for e in created_events:
         db.refresh(e)
 
-    group_code = get_group_code_for_user(user_id, db)
-    if group_code:
-        await broadcast(group_code, "refresh", {"reason": "event-added"})
+    await broadcast(group_code, "refresh", {"reason": "event-added"})
 
     return [
         {
@@ -196,10 +222,8 @@ async def add_event(user_id: int, event: EventCreate, db: Session = Depends(get_
     ]
 
 @_app.delete("/members/{user_id}/events/{event_id}")
-async def delete_event(user_id: int, event_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+async def delete_event(user_id: int, event_id: int, group_code: str, db: Session = Depends(get_db)):
+    verify_group_code(user_id, group_code, db)
     event = db.query(Event).filter(Event.id == event_id, Event.user_id == user_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -207,43 +231,44 @@ async def delete_event(user_id: int, event_id: int, db: Session = Depends(get_db
     db.delete(event)
     db.commit()
 
-    group_code = get_group_code_for_user(user_id, db)
-    if group_code:
-        await broadcast(group_code, "refresh", {"reason": "event-deleted"})
+    await broadcast(group_code, "refresh", {"reason": "event-deleted"})
 
     return "event deleted"
 
 class UpdateEvent(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=200)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     is_task: Optional[bool] = None
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=2000)
     user_id: Optional[int] = None
 
 @_app.patch("/members/{user_id}/events/{event_id}")
 async def update_event(
-    user_id: int, event_id: int, payload: UpdateEvent, db: Session = Depends(get_db)
+    user_id: int, event_id: int, payload: UpdateEvent, group_code: str, db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = verify_group_code(user_id, group_code, db)
     event = db.query(Event).filter(Event.id == event_id, Event.user_id == user_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    for key, value in payload.dict(exclude_unset=True).items():
+    update_data = payload.dict(exclude_unset=True)
+    new_user_id = update_data.get("user_id")
+    if new_user_id is not None:
+        new_user = db.query(User).filter(User.id == new_user_id).first()
+        if not new_user or new_user.group_id != user.group_id:
+            raise HTTPException(status_code=400, detail="Target user must belong to the same group")
+
+    for key, value in update_data.items():
         setattr(event, key, value)
 
     db.commit()
     db.refresh(event)
 
-    group_code = get_group_code_for_user(user_id, db)
-    if group_code:
-        await broadcast(group_code, "refresh", {"reason": "event-updated"})
+    await broadcast(group_code, "refresh", {"reason": "event-updated"})
 
     return {
-        "user_id": user_id,
+        "user_id": event.user_id,
         "event_id": event.id,
         "title": event.title,
         "start_time": event.start_time,
@@ -255,8 +280,8 @@ async def update_event(
 # ── Members ───────────────────────────────────────────────────────────────────
 
 class AddUserRequest(BaseModel):
-    name: str
-    color: str
+    name: str = Field(..., max_length=100)
+    color: str = Field(..., max_length=30)
 
 @_app.post("/group/{group_code}/members")
 async def add_user(group_code: str, payload: AddUserRequest, db: Session = Depends(get_db)):
@@ -279,24 +304,19 @@ async def add_user(group_code: str, payload: AddUserRequest, db: Session = Depen
     }
 
 @_app.delete("/members/{user_id}")
-async def delete_member(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    group_code = get_group_code_for_user(user_id, db)
+async def delete_member(user_id: int, group_code: str, db: Session = Depends(get_db)):
+    user = verify_group_code(user_id, group_code, db)
 
     db.delete(user)
     db.commit()
 
-    if group_code:
-        await broadcast(group_code, "refresh", {"reason": "member-deleted"})
+    await broadcast(group_code, "refresh", {"reason": "member-deleted"})
 
     return "user deleted"
 
 class UpdateUser(BaseModel):
-    name: Optional[str] = None
-    color: Optional[str] = None
+    name: Optional[str] = Field(None, max_length=100)
+    color: Optional[str] = Field(None, max_length=30)
 
 @_app.patch("/group/{group_code}/members/{user_id}")
 async def update_user(
@@ -329,7 +349,7 @@ async def update_user(
 
 class ChoreCreate(BaseModel):
     user_id: int
-    title: str
+    title: str = Field(..., max_length=200)
     completed: bool = False
 
 class ChoreToggle(BaseModel):
@@ -382,18 +402,14 @@ async def add_chore(group_code: str, payload: ChoreCreate, db: Session = Depends
     }
 
 @_app.patch("/chores/{chore_id}")
-async def toggle_chore(chore_id: int, payload: ChoreToggle, db: Session = Depends(get_db)):
-    chore = db.query(Chore).filter(Chore.id == chore_id).first()
-    if not chore:
-        raise HTTPException(status_code=404, detail="Chore not found")
+async def toggle_chore(chore_id: int, payload: ChoreToggle, group_code: str, db: Session = Depends(get_db)):
+    chore = verify_chore_group_code(chore_id, group_code, db)
 
     chore.completed = payload.completed
     db.commit()
     db.refresh(chore)
 
-    group = db.query(Group).filter(Group.id == chore.group_id).first()
-    if group:
-        await broadcast(group.code, "refresh", {"reason": "chore-toggled"})
+    await broadcast(group_code, "refresh", {"reason": "chore-toggled"})
 
     return {
         "chore_id": chore.id,
@@ -404,16 +420,12 @@ async def toggle_chore(chore_id: int, payload: ChoreToggle, db: Session = Depend
     }
 
 @_app.delete("/chores/{chore_id}")
-async def delete_chore(chore_id: int, db: Session = Depends(get_db)):
-    chore = db.query(Chore).filter(Chore.id == chore_id).first()
-    if not chore:
-        raise HTTPException(status_code=404, detail="Chore not found")
+async def delete_chore(chore_id: int, group_code: str, db: Session = Depends(get_db)):
+    chore = verify_chore_group_code(chore_id, group_code, db)
 
-    group = db.query(Group).filter(Group.id == chore.group_id).first()
     db.delete(chore)
     db.commit()
 
-    if group:
-        await broadcast(group.code, "refresh", {"reason": "chore-deleted"})
+    await broadcast(group_code, "refresh", {"reason": "chore-deleted"})
 
     return "chore deleted"

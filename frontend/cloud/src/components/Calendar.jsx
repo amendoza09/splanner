@@ -130,6 +130,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
         isOpen={addEventOpen}
         onClose={() => setAddEventOpen(false)}
         members={members}
+        groupCode={groupCode}
         onNewEvent={onNewEvent}
       />
       <EventCard
@@ -139,6 +140,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
         onDelete={onDeleteEvent}
         onUpdate={onUpdate}
         members={members}
+        groupCode={groupCode}
       />
     </div>
   );

@@ -34,7 +34,7 @@ const Chores = ({ members, groupCode }) => {
       setChores(prev =>
         prev.map(c => c.chore_id === chore.chore_id ? { ...c, completed: !c.completed } : c)
       );
-      await toggleChore(chore.chore_id, !chore.completed);
+      await toggleChore(groupCode, chore.chore_id, !chore.completed);
     } catch (e) {
       console.error("Failed to toggle chore", e);
       fetchChores(); // revert on error
@@ -44,7 +44,7 @@ const Chores = ({ members, groupCode }) => {
   const handleDelete = async (choreId) => {
     try {
       setChores(prev => prev.filter(c => c.chore_id !== choreId));
-      await deleteChore(choreId);
+      await deleteChore(groupCode, choreId);
     } catch (e) {
       console.error("Failed to delete chore", e);
       fetchChores();
