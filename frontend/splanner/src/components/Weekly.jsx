@@ -7,10 +7,12 @@ const TOTAL_HOURS = 24;
 // gutter is new — it exists purely so the next-week arrow has a column that
 // lines up with every other grid row in this view (hour lines, events, now-line).
 const GRID_TEMPLATE = '36px repeat(7, 1fr) 36px';
+const MOBILE_MAX_VISIBLE_TASKS = 1;
+const MAX_VISIBLE_TASKS = 2;
 
 const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDeleteEvent, onWeekChange }) => {
   const [now, setNow] = useState(new Date());
-  const currentMonth = useState(new Date());
+  const [allDayExpanded, setAllDayExpanded] = useState(false);
   const scrollRef = useRef(null);
   const nowLineRef = useRef(null);
 
@@ -63,6 +65,19 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
 
   const goToPreviousWeek = () => onWeekChange?.(subWeeks(referenceDate, 1));
   const goToNextWeek = () => onWeekChange?.(addWeeks(referenceDate, 1));
+
+  const toggleAllDayExpanded = () => setAllDayExpanded((prev) => !prev);
+
+  const renderTaskButton = (task) => (
+    <button
+      key={task.id}
+      onClick={() => { onEventOpen(true); onSelectedEvent(task); }}
+      className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80 min-h-[35px] min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
+      style={{ backgroundColor: task.color }}
+    >
+      {task.title}
+    </button>
+  );
 
   const formatHour = (hour) => {
         if (hour === 0) return "12a";
@@ -156,6 +171,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
 
   const weekDays = generateWeekDays(referenceDate);
   const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
+  const hasMobileOverflow = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > MOBILE_MAX_VISIBLE_TASKS);
+  const hasDesktopOverflow = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > MAX_VISIBLE_TASKS);
 
   return (
     <div className="h-[93vh] flex flex-col overflow-hidden bg-white mb-[1rem]">
@@ -210,22 +227,74 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         {weekDays.map((day) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const tasks = tasksByDate[dateKey] || [];
+
+                            const mobileCapped = tasks.slice(0, MOBILE_MAX_VISIBLE_TASKS);
+                            const mobileExtra = tasks.slice(MOBILE_MAX_VISIBLE_TASKS);
+
+                            const desktopCapped = tasks.slice(0, MAX_VISIBLE_TASKS);
+                            const desktopExtra = tasks.slice(MAX_VISIBLE_TASKS);
+
                             return (
                                 <div key={dateKey} className="flex flex-col gap-0.5 px-0.5 py-1 min-h-[35px] min-w-0">
-                                    {tasks.map((task) => (
-                                        <button
-                                            key={task.id}
-                                            onClick={() => { onEventOpen(true); onSelectedEvent(task); }}
-                                            className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80 min-h-[35px] min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
-                                            style={{ backgroundColor: task.color }}
-                                        >
-                                            {task.title}
-                                        </button>
-                                    ))}
+                                    {/* Mobile: 1 task visible, rest reveal smoothly */}
+                                    <div className="flex flex-col gap-0.5 md:hidden">
+                                        {mobileCapped.map(renderTaskButton)}
+                                        {mobileExtra.length > 0 && (
+                                            <div
+                                                className="grid overflow-hidden motion-safe:transition-[grid-template-rows] motion-safe:duration-300 motion-safe:ease-out"
+                                                style={{ gridTemplateRows: allDayExpanded ? '1fr' : '0fr' }}
+                                            >
+                                                <div className="flex flex-col gap-0.5 min-h-0 overflow-hidden">
+                                                    {mobileExtra.map(renderTaskButton)}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Tablet/desktop: 2 tasks visible, rest reveal smoothly */}
+                                    <div className="hidden md:flex md:flex-col gap-0.5">
+                                        {desktopCapped.map(renderTaskButton)}
+                                        {desktopExtra.length > 0 && (
+                                            <div
+                                                className="grid overflow-hidden motion-safe:transition-[grid-template-rows] motion-safe:duration-300 motion-safe:ease-out"
+                                                style={{ gridTemplateRows: allDayExpanded ? '1fr' : '0fr' }}
+                                            >
+                                                <div className="flex flex-col gap-0.5 min-h-0 overflow-hidden">
+                                                    {desktopExtra.map(renderTaskButton)}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })}
-                        <div />
+                        {/* Single expand/collapse control for the whole all-day row, far right */}
+                        <div className="flex items-center justify-center">
+                            {hasMobileOverflow && (
+                                <button
+                                    onClick={toggleAllDayExpanded}
+                                    className="md:hidden w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs leading-none transition-colors"
+                                >
+                                    <span
+                                        className={`inline-block transition-transform duration-300 ease-out ${allDayExpanded ? 'rotate-180' : ''}`}
+                                    >
+                                        ⌄
+                                    </span>
+                                </button>
+                            )}
+                            {hasDesktopOverflow && (
+                                <button
+                                    onClick={toggleAllDayExpanded}
+                                    className="hidden md:flex w-6 h-6 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs leading-none transition-colors"
+                                >
+                                    <span
+                                        className={`inline-block transition-transform duration-300 ease-out ${allDayExpanded ? 'rotate-180' : ''}`}
+                                    >
+                                        ⌄
+                                    </span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
