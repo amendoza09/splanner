@@ -47,7 +47,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       {/* Compact toolbar — single row */}
-      <div className="flex items-center justify-between pl-14 pr-3 md:px-5 py-1 border-b border-gray-200 bg-white" style={{ height: 48 }}>
+      <div className="flex items-center justify-between pl-14 pr-3 md:px-5 py-1 border-b border-gray-200 bg-white shadow-sm relative z-10" style={{ height: 48 }}>
         {/* View toggles */}
         <div className="flex gap-1">
           <button

@@ -11,7 +11,7 @@ if(!gotTheLock) {
 
 function createWindow() {
   const win = new BrowserWindow({
-    title: "Cloud",
+    title: "Splanner",
     fullscreen: true,
     kiosk: true,
     frame: false,

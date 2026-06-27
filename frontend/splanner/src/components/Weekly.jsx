@@ -189,7 +189,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                         <button
                                             key={task.id}
                                             onClick={() => { onEventOpen(true); onSelectedEvent(task); }}
-                                            className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80 min-h-[35px] min-w-0"
+                                            className="w-full text-[12px] font-medium text-center rounded px-1 leading-5 truncate opacity-80 min-h-[35px] min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
                                             style={{ backgroundColor: task.color }}
                                         >
                                             {task.title}
@@ -249,7 +249,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                         <button
                                           key={event.id}
                                           onClick={() => { onEventOpen(true); onSelectedEvent(event); }}
-                                          className="absolute rounded-md text-left overflow-hidden opacity-80 min-w-0"
+                                          className="absolute rounded-md text-left overflow-hidden opacity-80 min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
                                           style={{
                                             top, height,
                                             backgroundColor: event.color,

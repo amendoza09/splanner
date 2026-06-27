@@ -14,7 +14,7 @@ const Step = ({ n, title, children }) => (
     <h2 className="flex items-center gap-3 text-xl text-gray-900" style={displayFont}>
       <span
         className="w-7 h-7 rounded-full flex items-center justify-center text-sm text-white flex-shrink-0"
-        style={{ backgroundColor: "var(--green)", fontFamily: "initial" }}
+        style={{ backgroundColor: "var(--red)", fontFamily: "initial" }}
       >
         {n}
       </span>
@@ -35,9 +35,21 @@ const SelfHost = () => {
             Run your own Splanner
           </h1>
           <p className="text-gray-500">
-            Splanner is self-hostable — clone the repo, point it at your own database, and build
-            your own desktop app. Nothing runs through our servers; your group's data lives in
-            your own database.
+            Splanner is self-hostable! Clone the repo, point it at your own database, and build
+            your own desktop app. Nothing runs through our servers; your group's data stays
+            wherever you put it.
+          </p>
+        </Reveal>
+
+        <Reveal className="rounded-xl border border-gray-200 bg-white p-5 flex flex-col gap-2">
+          <h2 className="text-lg text-gray-900 font-semibold" style={displayFont}>
+            Built for a Raspberry Pi + touchscreen
+          </h2>
+          <p className="text-gray-500 text-sm">
+            These steps assume the reference setup: a Raspberry Pi with a touchscreen, booting
+            straight into the kiosk build mounted on a wall. That's a recommendation, not a
+            requirement. Anything that runs Python and Node works, from an old laptop to a mini
+            PC to a regular monitor with a mouse and keyboard.
           </p>
         </Reveal>
 

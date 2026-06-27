@@ -56,7 +56,7 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
           ) : (
             <>
               <button onClick={saveChanges}
-                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm">Save</button>
+                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm shadow-md">Save</button>
               <button onClick={() => { setName(member.name); setColor(member.color); setIsEditing(false); }}
                 className="flex-1 py-3 rounded-xl bg-gray-100 text-sm">Cancel</button>
             </>

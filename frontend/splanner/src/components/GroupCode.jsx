@@ -82,15 +82,20 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
           font-weight: 600;
           cursor: pointer;
           margin-top: 2rem;
-          transition: opacity 0.15s, transform 0.1s;
+          box-shadow: 0 8px 20px rgba(108, 200, 106, 0.35);
+          transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
         }
 
         .btn-join:disabled {
           opacity: 0.35;
           cursor: not-allowed;
+          box-shadow: none;
         }
 
-        .btn-join:not(:disabled):active { transform: scale(0.98); }
+        .btn-join:not(:disabled):active {
+          transform: scale(0.98);
+          box-shadow: 0 3px 10px rgba(108, 200, 106, 0.3);
+        }
         @media (hover: hover) and (pointer: fine) {
           .btn-join:not(:disabled):hover { opacity: 0.88; }
         }

@@ -132,7 +132,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
           ) : (
             <>
               <button onClick={handleSave}
-                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm">
+                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm shadow-md">
                 Save
               </button>
               <button onClick={cancelEdit}

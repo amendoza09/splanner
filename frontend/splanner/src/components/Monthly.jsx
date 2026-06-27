@@ -95,7 +95,7 @@ const MonthlyView = ({ members, onDayPress }) => {
           const isToday = dateKey === currentDate;
           const isSelected = dateKey === selectedDate;
           const events = eventsByDate[dateKey] || [];
-          const MAX_BARS = 3;
+          const MAX_BARS = 8;
           const overflow = events.length - MAX_BARS;
 
           return (
@@ -117,8 +117,9 @@ const MonthlyView = ({ members, onDayPress }) => {
                 </span>
               </div>
 
-              {/* Color bars — one per event, up to 3 */}
-              <div className="flex flex-col gap-[2px]">
+              {/* Mobile: compact color bars, one per event, up to 3 — no
+                  room (or hover) for titles at this size */}
+              <div className="flex flex-col gap-[2px] md:hidden">
                 {events.slice(0, MAX_BARS).map((event, j) => (
                   <div
                     key={j}
@@ -126,6 +127,25 @@ const MonthlyView = ({ members, onDayPress }) => {
                     style={{ backgroundColor: event.memberColor }}
                     title={`${event.memberName}: ${event.title}`}
                   />
+                ))}
+                {overflow > 0 && (
+                  <span className="text-[9px] text-gray-400 leading-none mt-0.5">
+                    +{overflow}
+                  </span>
+                )}
+              </div>
+
+              {/* Tablet/desktop: room for truncated title chips, up to 3 */}
+              <div className="hidden md:flex md:flex-col gap-[2px]">
+                {events.slice(0, MAX_BARS).map((event, j) => (
+                  <div
+                    key={j}
+                    className="text-[9px] leading-tight font-medium rounded px-1 truncate opacity-80 shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
+                    style={{ backgroundColor: event.memberColor }}
+                    title={`${event.memberName}: ${event.title}`}
+                  >
+                    {event.title}
+                  </div>
                 ))}
                 {overflow > 0 && (
                   <span className="text-[9px] text-gray-400 leading-none mt-0.5">

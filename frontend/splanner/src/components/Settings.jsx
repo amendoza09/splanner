@@ -66,7 +66,7 @@ const Settings = ({ isOpen, onClose, groupCode, onLogout, onRegenerateCode }) =>
                 <button
                   onClick={handleRegenerateCode}
                   disabled={regenerating}
-                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold disabled:opacity-50 shadow-md disabled:shadow-none"
                 >
                   {regenerating ? "Generating…" : "Yes, generate"}
                 </button>
@@ -96,7 +96,7 @@ const Settings = ({ isOpen, onClose, groupCode, onLogout, onRegenerateCode }) =>
                 <button
                   onClick={handleDeleteGroup}
                   disabled={deleting}
-                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold disabled:opacity-50 shadow-md disabled:shadow-none"
                 >
                   {deleting ? "Deleting…" : "Yes, delete group"}
                 </button>

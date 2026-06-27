@@ -32,7 +32,7 @@ const AddMember = ({ isOpen, onClose, onAdd }) => {
         </div>
         <button
           onClick={handleAdd} disabled={!name.trim()}
-          className="w-full py-3 rounded-xl bg-[var(--green)] text-white font-semibold disabled:opacity-40"
+          className="w-full py-3 rounded-xl bg-[var(--green)] text-white font-semibold disabled:opacity-40 shadow-md disabled:shadow-none"
         >
           Add
         </button>

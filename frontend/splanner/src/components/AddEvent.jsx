@@ -124,7 +124,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
 
         <button
           onClick={handleSubmit} disabled={!canSubmit}
-          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold disabled:opacity-40 active:scale-[0.97] transition-transform duration-150"
+          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold disabled:opacity-40 disabled:shadow-none shadow-md active:scale-[0.97] transition-transform duration-150"
         >
           Create
         </button>

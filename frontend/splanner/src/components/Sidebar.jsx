@@ -62,7 +62,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
     <>
       {/* ── Desktop: static rail ── */}
       <div
-        className="hidden md:flex h-screen flex-col items-center border-r border-gray-200 bg-white"
+        className="hidden md:flex h-screen flex-col items-center border-r border-gray-200 bg-white shadow-[2px_0_8px_rgba(0,0,0,0.06)] relative z-10"
         style={{ width: 64, minWidth: 64 }}
       >
         {desktopContent}

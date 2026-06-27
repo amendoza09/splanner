@@ -49,7 +49,7 @@ const Landing = () => {
             to="/app"
             state={{ autoCreate: true }}
             className="btn-pill btn-pill-fill px-6 h-12 text-white"
-            style={{ backgroundColor: "var(--green)" }}
+            style={{ backgroundColor: "var(--red)" }}
           >
             Create Group
           </Link>
