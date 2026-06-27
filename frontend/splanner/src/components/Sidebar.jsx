@@ -6,7 +6,7 @@ import AddMember from "./AddMember";
 import Member from './Member';
 import Settings from "./Settings";
 
-const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate, onUserDelete }) => {
+const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, onUpdate, onUserDelete }) => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -172,6 +172,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate, onUserDe
         onClose={() => setSettingsOpen(false)}
         groupCode={groupCode}
         onLogout={onLogout}
+        onRegenerateCode={onRegenerateCode}
       />
     </>
   );

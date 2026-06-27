@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
@@ -6,7 +6,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { io } from "socket.io-client";
 
-import { getGroupByCode, createGroup } from './api';
+import { getGroupByCode, createGroup, regenerateGroupCode } from './api';
 
 const SOCKET_URL = process.env.REACT_APP_API_URL;
 const socket = io(SOCKET_URL, {
@@ -24,6 +24,10 @@ function App() {
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [status, setStatus] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  // True while this tab's own regenerate-code request is in flight, so the
+  // broadcast it triggers doesn't log this tab itself out (see the
+  // "group_code_changed" listener below).
+  const selfRotatingRef = useRef(false);
 
   const enterGroup = async (code) => {
     try {
@@ -70,6 +74,17 @@ function App() {
     }
   };
 
+  const handleRegenerateCode = async () => {
+    selfRotatingRef.current = true;
+    // Safety net in case the broadcast this triggers never arrives (e.g. a
+    // dropped connection) — don't leave the flag stuck suppressing a future,
+    // unrelated rotation by someone else.
+    setTimeout(() => { selfRotatingRef.current = false; }, 5000);
+    const data = await regenerateGroupCode(groupCode);
+    localStorage.setItem("groupCode", data.group_code);
+    setGroupCode(data.group_code);
+  };
+
   const refresh = useCallback(async () => {
     if (!groupCode) return;
     const data = await getGroupByCode(groupCode);
@@ -100,12 +115,19 @@ function App() {
   }, [groupCode]);
 
   // Listen for the group's code changing or the group being deleted —
-  // these reach every connected client, not just the one that requested it
+  // these reach every connected client, not just the one that requested it.
+  // The server never sends the new code over this channel (only in the HTTP
+  // response to whoever requested it), so for everyone else this is a forced
+  // logout — they need the new code shared with them out of band.
   useEffect(() => {
-    const onCodeChanged = ({ new_code }) => {
-      if (!new_code) return;
-      localStorage.setItem("groupCode", new_code);
-      setGroupCode(new_code);
+    const onCodeChanged = () => {
+      if (selfRotatingRef.current) {
+        selfRotatingRef.current = false;
+        return;
+      }
+      localStorage.removeItem("groupCode");
+      setGroupCode(null);
+      setMembers([]);
     };
     const onGroupDeleted = () => {
       localStorage.removeItem("groupCode");
@@ -171,6 +193,7 @@ function App() {
         members={members}
         groupCode={groupCode}
         onLogout={handleLogout}
+        onRegenerateCode={handleRegenerateCode}
         onNewMember={refresh}
         onUpdate={refresh}
         onUserDelete={refresh}

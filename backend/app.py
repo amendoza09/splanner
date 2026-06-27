@@ -5,7 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
-from database import get_db
+from database import get_db, SessionLocal
 from models import Group, User, Event, Chore
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta, time
@@ -41,13 +41,23 @@ async def connect(sid, environ):
 async def disconnect(sid):
     print(f"Client {sid} disconnected")
 
-# Client joins a room identified by their group code
+# Client joins a room identified by their group code. Reject codes that
+# don't correspond to a real group so an attacker can't sit in an arbitrary
+# room name waiting to snoop on broadcasts (e.g. a future regenerated code).
 @sio.event
 async def join_group(sid, data):
     group_code = data.get("group_code")
-    if group_code:
-        await sio.enter_room(sid, group_code)
-        print(f"Client {sid} joined room {group_code}")
+    if not group_code:
+        return
+    db = SessionLocal()
+    try:
+        group_exists = db.query(Group).filter(Group.code == group_code).first() is not None
+    finally:
+        db.close()
+    if not group_exists:
+        return
+    await sio.enter_room(sid, group_code)
+    print(f"Client {sid} joined room {group_code}")
 
 @sio.event
 async def leave_group(sid, data):
@@ -158,9 +168,11 @@ async def regenerate_group_code(group_code: str, db: Session = Depends(get_db)):
             db.rollback()
             continue
         db.refresh(group)
-        # Broadcast to the old room name — connected clients haven't rejoined
-        # under the new code yet, so this is the only room they're still in.
-        await broadcast(group_code, "group_code_changed", {"new_code": new_code})
+        # Broadcast to the old room name with no code in the payload — anyone
+        # in that room who isn't the requester (who gets the new code via this
+        # HTTP response) should be treated as logged out, not handed the new
+        # secret over a channel that never verified they were authorized.
+        await broadcast(group_code, "group_code_changed", {})
         return {"group_id": group.id, "group_code": new_code}
     raise HTTPException(status_code=500, detail="Could not generate a unique group code")
 

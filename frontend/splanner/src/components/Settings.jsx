@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { deleteGroup, regenerateGroupCode } from "../api";
+import { deleteGroup } from "../api";
 
-const Settings = ({ isOpen, onClose, groupCode, onLogout }) => {
+const Settings = ({ isOpen, onClose, groupCode, onLogout, onRegenerateCode }) => {
   const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -18,10 +18,7 @@ const Settings = ({ isOpen, onClose, groupCode, onLogout }) => {
   const handleRegenerateCode = async () => {
     try {
       setRegenerating(true);
-      // The new code reaches every connected client (including this one)
-      // via the "group_code_changed" socket broadcast, so no local state
-      // update is needed here.
-      await regenerateGroupCode(groupCode);
+      await onRegenerateCode();
     } catch (e) {
       alert("Could not generate a new code");
     } finally {
