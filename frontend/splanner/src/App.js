@@ -115,7 +115,7 @@ function App() {
       <div className="h-screen flex items-center justify-center">
         <div
           className="w-10 h-10 rounded-full animate-spin"
-          style={{ border: "4px solid #e0e0e0", borderTopColor: "var(--green)" }}
+          style={{ border: "4px solid #e0e0e0", borderTopColor: "var(--red)" }}
         />
       </div>
     );
