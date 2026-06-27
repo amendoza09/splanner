@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import { io } from "socket.io-client";
 
 import { getGroupByCode, createGroup } from './api';
@@ -106,13 +107,18 @@ function App() {
 
   if (!groupCode) {
     return (
-      <GroupCodeScreen
-        onSubmit={handleJoinGroup}
-        onCreateGroup={handleCreateGroup}
-        loadingJoin={loadingJoin}
-        loadingCreate={loadingCreate}
-        statusCode={status}
-      />
+      <div className="h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 min-h-0">
+          <GroupCodeScreen
+            onSubmit={handleJoinGroup}
+            onCreateGroup={handleCreateGroup}
+            loadingJoin={loadingJoin}
+            loadingCreate={loadingCreate}
+            statusCode={status}
+          />
+        </div>
+      </div>
     );
   }
 

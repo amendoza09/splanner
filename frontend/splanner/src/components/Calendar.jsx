@@ -52,21 +52,21 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
         <div className="flex gap-1">
           <button
             onClick={() => setView("week")}
-            className={`p-2 rounded-lg ${view === "week" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            className={`p-2 rounded-lg transition-colors duration-150 ${view === "week" ? "bg-gray-200" : "hover:bg-gray-100"}`}
             style={{ minHeight: 36, minWidth: 36 }}
           >
             <MdCalendarViewWeek size={22} />
           </button>
           <button
             onClick={() => setView("month")}
-            className={`p-2 rounded-lg ${view === "month" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            className={`p-2 rounded-lg transition-colors duration-150 ${view === "month" ? "bg-gray-200" : "hover:bg-gray-100"}`}
             style={{ minHeight: 36, minWidth: 36 }}
           >
             <TbCalendarMonthFilled size={22} />
           </button>
           <button
             onClick={() => setView("chores")}
-            className={`p-2 rounded-lg text-lg ${view === "chores" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            className={`p-2 rounded-lg text-lg transition-colors duration-150 ${view === "chores" ? "bg-gray-200" : "hover:bg-gray-100"}`}
             style={{ minHeight: 36, minWidth: 36 }}
             title="Chores"
           >
@@ -87,7 +87,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
 
           {/* icon */}
           <div>
-            <img className="h-[20px]" src={icon}/>
+            <img className="h-[20px]" src={icon} alt="" />
           </div>
         </div>
         

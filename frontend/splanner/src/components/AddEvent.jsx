@@ -40,8 +40,8 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
     (isTask ? (taskStartDate && taskEndDate) : (startTime && endTime));
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
-      <div className="bg-white rounded-t-2xl p-5 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+    <div className="sheet-backdrop fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
+      <div className="sheet-panel bg-white rounded-t-2xl p-5 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold">New Event</h2>
           <button onClick={() => { resetForm(); onClose(); }} className="text-gray-400 text-xl w-10 h-10 flex items-center justify-center">✕</button>
@@ -52,7 +52,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
           {members.map((member) => (
             <button
               key={member.user_id}
-              className={`px-3 h-9 rounded-full text-sm font-medium transition-all
+              className={`px-3 h-9 rounded-full text-sm font-medium transition-[background-color,box-shadow] duration-150
                 ${selectedMember?.user_id === member.user_id ? 'ring-2 ring-offset-1 ring-gray-500 shadow' : ''}`}
               style={{ backgroundColor: selectedMember?.user_id === member.user_id ? member.color : '#e5e7eb', color: '#111' }}
               onClick={() => setSelectedMember(member)}
@@ -124,7 +124,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
 
         <button
           onClick={handleSubmit} disabled={!canSubmit}
-          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold disabled:opacity-40 active:scale-98 transition-all"
+          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold disabled:opacity-40 active:scale-[0.97] transition-transform duration-150"
         >
           Create
         </button>

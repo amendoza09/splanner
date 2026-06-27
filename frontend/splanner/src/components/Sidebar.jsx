@@ -87,10 +87,10 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onUpdate, onUserDe
 
       {/* ── Mobile: slide-in drawer ── */}
       <div
-        className={`md:hidden fixed top-0 left-0 h-full z-50 bg-white shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`md:hidden fixed top-0 left-0 h-full z-50 bg-white shadow-xl flex flex-col transition-transform duration-300 ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ width: 220 }}
+        style={{ width: 220, transitionTimingFunction: "var(--ease-drawer)" }}
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getChores, addChore, toggleChore, deleteChore } from "../api";
 import { FaRegTrashAlt } from "react-icons/fa";
 
@@ -7,14 +7,14 @@ const Chores = ({ members, groupCode }) => {
   const [adding, setAdding] = useState(null); // user_id of member being added to
   const [newChoreText, setNewChoreText] = useState("");
 
-  const fetchChores = async () => {
+  const fetchChores = useCallback(async () => {
     const data = await getChores(groupCode);
     setChores(data);
-  };
+  }, [groupCode]);
 
   useEffect(() => {
     fetchChores();
-  }, [groupCode]);
+  }, [fetchChores]);
 
   const handleAdd = async (userId) => {
     if (!newChoreText.trim()) return;
@@ -106,7 +106,7 @@ const Chores = ({ members, groupCode }) => {
 
             {/* Chore list */}
             {memberChores.length === 0 && !isAdding ? (
-              <p className="text-xs text-gray-300 pl-9">No chores yet</p>
+              <p className="text-xs text-gray-500 pl-9">No chores yet</p>
             ) : (
               <div className="flex flex-col gap-1 pl-9">
                 {memberChores.map((chore) => (

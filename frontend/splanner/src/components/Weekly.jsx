@@ -81,6 +81,9 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
     };
     const t = setTimeout(scrollToNow, 100);
     return () => clearTimeout(t);
+    // Intentionally mount-only: this should scroll to "now" once on open,
+    // not every time `now` (and therefore nowTop) ticks over each minute.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

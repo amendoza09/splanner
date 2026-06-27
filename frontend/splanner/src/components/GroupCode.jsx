@@ -6,8 +6,8 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
 
   return (
     <div style={{
-      minHeight: '100vh',
-      width: '100vw',
+      height: '100%',
+      width: '100%',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -91,7 +91,9 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
         }
 
         .btn-join:not(:disabled):active { transform: scale(0.98); }
-        .btn-join:not(:disabled):hover { opacity: 0.88; }
+        @media (hover: hover) and (pointer: fine) {
+          .btn-join:not(:disabled):hover { opacity: 0.88; }
+        }
 
         .or-row {
           display: flex;
@@ -133,7 +135,9 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
         }
 
         .btn-create:not(:disabled):active { transform: scale(0.98); }
-        .btn-create:not(:disabled):hover { border-color: #c4a0f5; }
+        @media (hover: hover) and (pointer: fine) {
+          .btn-create:not(:disabled):hover { border-color: #c4a0f5; }
+        }
       `}</style>
 
       <div className="login-wrap">

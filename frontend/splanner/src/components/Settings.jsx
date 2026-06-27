@@ -2,8 +2,8 @@ const Settings = ({ isOpen, onClose, groupCode, onLogout }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
-      <div className="bg-white rounded-t-2xl p-5 flex flex-col gap-5">
+    <div className="sheet-backdrop fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
+      <div className="sheet-panel bg-white rounded-t-2xl p-5 flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-base">Settings</h2>
           <button onClick={onClose} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl">✕</button>

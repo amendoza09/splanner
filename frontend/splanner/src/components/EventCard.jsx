@@ -63,19 +63,11 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
     return m === 0 ? `${h} ${p}` : `${h}:${m.toString().padStart(2, '0')} ${p}`;
   };
 
-  const toInputDateTime = (dateString) => {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    // Use local time components, not UTC
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
-
   const toInputDT = (d) => d ? new Date(d).toISOString().slice(0, 16) : "";
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
-      <div className="bg-white rounded-t-2xl p-5 flex flex-col gap-3 max-h-[85vh] overflow-y-auto">
+    <div className="sheet-backdrop fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
+      <div className="sheet-panel bg-white rounded-t-2xl p-5 flex flex-col gap-3 max-h-[85vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1">

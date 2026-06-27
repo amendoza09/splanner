@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+:root {
+  --red: #fc6f53;
+  --green: #78eb67;
+  --sidebar-width: 64px;
+  --touch-min: 44px;
+  --radius: 10px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --font-display: 'Fraunces', serif;
+}
+
+/* Bottom-sheet modals: AddEvent, EventCard, Member, AddMember, Settings.
+   Backdrop fade is kept under reduced-motion (aids comprehension); the
+   panel slide is movement, so it's dropped there. */
+.sheet-backdrop {
+  transition: background-color 250ms var(--ease-out);
+}
+
+@starting-style {
+  .sheet-backdrop {
+    background-color: transparent;
+  }
+}
+
+.sheet-panel {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-panel {
+    transition: transform 300ms var(--ease-drawer);
+  }
+}
+
+@starting-style {
+  .sheet-panel {
+    transform: translateY(100%);
+  }
+}
+
+/* Shared pill-button feel for marketing CTAs (Header, Landing) */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 150ms var(--ease-out), border-color 150ms var(--ease-out),
+    opacity 150ms var(--ease-out);
+}
+
+.btn-pill:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-pill-outline:hover {
+    border-color: #9ca3af;
+  }
+  .btn-pill-fill:hover {
+    opacity: 0.9;
+  }
+}
+
+/* Scroll-triggered reveal for marketing content (see Reveal.jsx). Fires when
+   the element actually enters the viewport, not at mount, so below-the-fold
+   sections don't finish animating before anyone scrolls to them. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  font-size: 15px;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Enforce minimum touch targets */
+button {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+}
+
+input[type="text"],
+input[type="date"],
+input[type="datetime-local"] {
+  min-height: var(--touch-min);
+  font-size: 15px;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
