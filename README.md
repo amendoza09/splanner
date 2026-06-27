@@ -1,18 +1,21 @@
-# 📅 Sync — Shared Group Calendar
+# 📅 Splanner — Shared Group Calendar
 
-A real-time shared calendar and chore tracker for groups. Built with React + Electron on the frontend and FastAPI + PostgreSQL on the backend.
+A real-time shared calendar and chore tracker for households. Built with React + Electron on the frontend and FastAPI + PostgreSQL on the backend. No accounts — a group is identified by a short code that anyone in the household can use to join.
 
 ---
 
 ## Features
 
 - **Shared group calendar** — join or create a group with a 5-character code, no accounts needed
-- **Weekly & monthly views** — toggle between a time-grid week view and a full month overview
+- **Weekly & monthly views** — a time-grid week view (with prev/next week navigation) and a full month overview
 - **Events & tasks** — create timed events or all-day tasks, assigned to any group member
 - **Chore tracker** — per-member checklist tab with add, complete, and delete support
 - **Real-time sync** — all changes broadcast instantly to every connected device via Socket.IO
-- **Weather widget** — shows current local temperature in the calendar toolbar
+- **Weather widget** — shows current local temperature in the calendar toolbar (US locations only — backed by the National Weather Service API)
+- **Group settings** — regenerate the group's join code or delete the group entirely, both gated behind a confirmation step
 - **Mobile friendly** — responsive layout with a slide-in hamburger menu on small screens
+- **Marketing site + self-host guide** — a landing page (`/`) and an in-app guide (`/self-host`) for running your own instance
+- **Built for a Raspberry Pi + touchscreen** — the Electron app can launch in fullscreen kiosk mode for a wall-mounted display, though any machine that runs Node and Python works
 - **Offline-capable desktop app** — packaged as an Electron app for Windows/Mac/Linux
 
 ---
@@ -22,7 +25,7 @@ A real-time shared calendar and chore tracker for groups. Built with React + Ele
 | Layer | Technology |
 |---|---|
 | Desktop app | Electron |
-| Frontend | React, Tailwind CSS |
+| Frontend | React, Tailwind CSS, React Router |
 | Backend | FastAPI (Python) |
 | Database | PostgreSQL (Supabase) |
 | Realtime | Socket.IO |
@@ -44,15 +47,14 @@ A real-time shared calendar and chore tracker for groups. Built with React + Ele
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/amendoza09/splanner.git
+cd splanner/frontend/splanner
 
 # 2. Install dependencies
 npm install
 
-# 3. Create your environment file
-cp .env.example .env
-# Edit .env and add your backend URL (see Environment Variables below)
+# 3. Create your environment file (see Environment Variables below)
+echo "REACT_APP_API_URL=http://localhost:8000" > .env
 
 # 4. Start in development mode
 npm start
@@ -72,6 +74,8 @@ npm run electron-prod
 > NODE_OPTIONS=--max-old-space-size=4096 npm run electron-prod
 > ```
 
+> `REACT_APP_API_URL` is baked into the app at build time, not read at runtime — set it before running `electron-prod` and rebuild if it changes.
+
 ---
 
 ### Backend Setup
@@ -87,9 +91,8 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Create your environment file
-cp .env.example .env
-# Edit .env and add your database URL
+# 4. Create your environment file (see Environment Variables below)
+echo "DB_URL=postgresql://user:password@host:port/dbname" > .env
 
 # 5. Create the database tables
 python -c "from database import engine; from models import Base; Base.metadata.create_all(bind=engine)"
@@ -102,13 +105,15 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 ### Environment Variables
 
-#### Frontend — `.env`
+`backend/.env` is gitignored — create it yourself as shown above. `frontend/splanner/.env` is currently tracked in the repo (it only holds a non-secret backend URL); replace it with your own value rather than relying on what's committed.
+
+#### Frontend — `frontend/splanner/.env`
 
 ```
 REACT_APP_API_URL=https://your-backend-url.com
 ```
 
-#### Backend — `.env`
+#### Backend — `backend/.env`
 
 ```
 DB_URL=postgresql://user:password@host:port/dbname
@@ -163,6 +168,8 @@ All routes are prefixed with your backend base URL.
 | `POST` | `/group` | Create a new group |
 | `GET` | `/group/{group_code}` | Get group with all members and events |
 | `GET` | `/group/{group_code}/members` | Get all members in a group |
+| `POST` | `/group/{group_code}/regenerate-code` | Generate a new code for the group, invalidating the old one |
+| `DELETE` | `/group/{group_code}` | Delete a group and all of its members, events, and chores |
 
 ### Members
 
@@ -222,12 +229,12 @@ All routes are prefixed with your backend base URL.
 
 ## Realtime Events
 
-The backend broadcasts Socket.IO `refresh` events to all clients in a group room whenever data changes. The frontend listens and re-fetches automatically.
+The backend broadcasts Socket.IO events to every client in a group's room (joined via `join_group` with a valid `group_code`).
 
-| Trigger | Reason payload |
-|---|---|
-| Member added/updated/deleted | `member-added`, `member-updated`, `member-deleted` |
-| Event added/updated/deleted | `event-added`, `event-updated`, `event-deleted` |
-| Chore added/toggled/deleted | `chore-added`, `chore-toggled`, `chore-deleted` |
+| Event | Payload | When |
+|---|---|---|
+| `refresh` | `{ reason }` | A member, event, or chore was added/updated/deleted — the reason is one of `member-added`, `member-updated`, `member-deleted`, `event-added`, `event-updated`, `event-deleted`, `chore-added`, `chore-toggled`, `chore-deleted` |
+| `group_code_changed` | `{}` | The group's code was regenerated. The new code is only returned in the HTTP response to whoever requested it — every other connected client should treat this as a forced logout and prompt for the new code |
+| `group_deleted` | `{}` | The group was deleted — connected clients should clear local state and return to the join/create screen |
 
 ---
