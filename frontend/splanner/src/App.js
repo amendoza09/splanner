@@ -21,6 +21,7 @@ function App() {
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [status, setStatus] = useState(null);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const enterGroup = async (code) => {
     try {
@@ -76,7 +77,11 @@ function App() {
   // On mount — restore saved group
   useEffect(() => {
     const savedCode = localStorage.getItem("groupCode");
-    if (savedCode) enterGroup(savedCode);
+    if (!savedCode) {
+      setCheckingSession(false);
+      return;
+    }
+    enterGroup(savedCode).finally(() => setCheckingSession(false));
   }, []);
 
   // When groupCode is set, join the socket room
@@ -104,6 +109,17 @@ function App() {
       socket.off("connect", onReconnect);
     };
   }, [refresh, groupCode]);
+
+  if (checkingSession) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div
+          className="w-10 h-10 rounded-full animate-spin"
+          style={{ border: "4px solid #e0e0e0", borderTopColor: "var(--green)" }}
+        />
+      </div>
+    );
+  }
 
   if (!groupCode) {
     return (
