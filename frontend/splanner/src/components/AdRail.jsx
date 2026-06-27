@@ -2,11 +2,11 @@ import { useEffect } from "react";
 
 const ADSENSE_CLIENT = "ca-pub-6043327387208916";
 
-// TODO: replace with real ad unit slot IDs from AdSense (Ads → By ad unit →
-// Display ads, sized 160x600) — these placeholders won't serve real ads.
+// Only one ad unit ("splanner banners") has been created so far — both
+// rails point at it until a second slot is made for the right side.
 const SLOT_IDS = {
-  left: "0000000000",
-  right: "0000000001",
+  left: "9311210938",
+  right: "9311210938",
 };
 
 const AdRail = ({ side }) => {
@@ -22,11 +22,11 @@ const AdRail = ({ side }) => {
     <div
       className={`hidden xl:block fixed top-1/2 -translate-y-1/2 ${
         side === "left" ? "left-6" : "right-6"
-      } w-[160px] h-[600px] z-0`}
+      } w-[160px] h-[800px] z-0`}
     >
       <ins
         className="adsbygoogle"
-        style={{ display: "block", width: "160px", height: "600px" }}
+        style={{ display: "inline-block", width: "160px", height: "800px" }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={SLOT_IDS[side]}
       />
