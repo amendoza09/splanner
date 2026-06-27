@@ -143,6 +143,40 @@ def create_group(db: Session = Depends(get_db)):
         return {"group_id": new_group.id, "group_code": new_group.code}
     raise HTTPException(status_code=500, detail="Could not generate a unique group code")
 
+@_app.post("/group/{group_code}/regenerate-code")
+async def regenerate_group_code(group_code: str, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.code == group_code).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    for _ in range(5):
+        new_code = generate_unique_code(db)
+        group.code = new_code
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            continue
+        db.refresh(group)
+        # Broadcast to the old room name — connected clients haven't rejoined
+        # under the new code yet, so this is the only room they're still in.
+        await broadcast(group_code, "group_code_changed", {"new_code": new_code})
+        return {"group_id": group.id, "group_code": new_code}
+    raise HTTPException(status_code=500, detail="Could not generate a unique group code")
+
+@_app.delete("/group/{group_code}")
+async def delete_group(group_code: str, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.code == group_code).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    db.delete(group)
+    db.commit()
+
+    await broadcast(group_code, "group_deleted", {})
+
+    return "group deleted"
+
 @_app.get("/group/{group_code}/members")
 def get_group_members(group_code: str, db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.code == group_code).first()

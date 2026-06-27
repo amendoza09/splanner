@@ -56,6 +56,16 @@ export const createGroup = async () => {
   return res.data;
 }
 
+export const deleteGroup = async (groupCode) => {
+  const res = await API.delete(`/group/${groupCode}`);
+  return res.data;
+}
+
+export const regenerateGroupCode = async (groupCode) => {
+  const res = await API.post(`/group/${groupCode}/regenerate-code`);
+  return res.data;
+}
+
 export const updateUser = async(groupCode, userID, updatedPayload) => {
   const res = await API.patch(`/group/${groupCode}/members/${userID}`, updatedPayload)
   return res.data

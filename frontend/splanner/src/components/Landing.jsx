@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Reveal from "./Reveal";
+import AdRail from "./AdRail";
 
 const FEATURES = [
   { title: "Shared Calendar", desc: "Everyone in the group sees the same week and month view, always in sync." },
@@ -31,6 +32,8 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
+      <AdRail side="left" />
+      <AdRail side="right" />
       <Header />
 
       <Reveal as="section" className="flex flex-col items-center text-center px-6 pt-16 pb-12 max-w-2xl mx-auto">
@@ -44,6 +47,7 @@ const Landing = () => {
         <div className="flex gap-3">
           <Link
             to="/app"
+            state={{ autoCreate: true }}
             className="btn-pill btn-pill-fill px-6 h-12 text-white"
             style={{ backgroundColor: "var(--green)" }}
           >

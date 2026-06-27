@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
@@ -16,6 +17,7 @@ const socket = io(SOCKET_URL, {
 });
 
 function App() {
+  const location = useLocation();
   const [members, setMembers] = useState([]);
   const [groupCode, setGroupCode] = useState(null);
   const [loadingJoin, setLoadingJoin] = useState(false);
@@ -74,14 +76,18 @@ function App() {
     setMembers(data.users.map(u => ({ ...u, events: u.events ?? [] })));
   }, [groupCode]);
 
-  // On mount — restore saved group
+  // On mount — restore saved group, or auto-create one if the user
+  // arrived here via a "Create Group" link
   useEffect(() => {
     const savedCode = localStorage.getItem("groupCode");
-    if (!savedCode) {
-      setCheckingSession(false);
+    if (savedCode) {
+      enterGroup(savedCode).finally(() => setCheckingSession(false));
       return;
     }
-    enterGroup(savedCode).finally(() => setCheckingSession(false));
+    setCheckingSession(false);
+    if (location.state?.autoCreate) {
+      handleCreateGroup();
+    }
   }, []);
 
   // When groupCode is set, join the socket room
@@ -92,6 +98,27 @@ function App() {
       socket.emit("leave_group", { group_code: groupCode });
     };
   }, [groupCode]);
+
+  // Listen for the group's code changing or the group being deleted —
+  // these reach every connected client, not just the one that requested it
+  useEffect(() => {
+    const onCodeChanged = ({ new_code }) => {
+      if (!new_code) return;
+      localStorage.setItem("groupCode", new_code);
+      setGroupCode(new_code);
+    };
+    const onGroupDeleted = () => {
+      localStorage.removeItem("groupCode");
+      setGroupCode(null);
+      setMembers([]);
+    };
+    socket.on("group_code_changed", onCodeChanged);
+    socket.on("group_deleted", onGroupDeleted);
+    return () => {
+      socket.off("group_code_changed", onCodeChanged);
+      socket.off("group_deleted", onGroupDeleted);
+    };
+  }, []);
 
   // Listen for server-side refresh broadcasts
   useEffect(() => {

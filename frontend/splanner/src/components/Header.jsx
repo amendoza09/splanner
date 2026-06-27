@@ -27,6 +27,7 @@ const Header = () => {
           </Link>
           <Link
             to="/app"
+            state={{ autoCreate: true }}
             className="btn-pill btn-pill-fill px-5 h-10 text-sm text-white"
             style={{ backgroundColor: "var(--green)" }}
           >
