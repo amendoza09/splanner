@@ -1,15 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
-import { format, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks } from 'date-fns';
 
 const HOUR_HEIGHT = 50;
 const TOTAL_HOURS = 24;
+// Left gutter holds hour labels (and now the prev-week arrow on row 1); right
+// gutter is new — it exists purely so the next-week arrow has a column that
+// lines up with every other grid row in this view (hour lines, events, now-line).
+const GRID_TEMPLATE = '36px repeat(7, 1fr) 36px';
 
-const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDeleteEvent }) => {
+const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDeleteEvent, onWeekChange }) => {
   const [now, setNow] = useState(new Date());
+  const currentMonth = useState(new Date());
   const scrollRef = useRef(null);
   const nowLineRef = useRef(null);
 
   const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
+  const referenceDate = selectedDate ? new Date(selectedDate) : new Date();
   const currentDate = format(new Date(), 'yyyy-MM-dd');
   const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
   const nowTop = (minutesSinceMidnight / 60) * HOUR_HEIGHT;
@@ -54,6 +60,9 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
       const end = endOfWeek(date, { weekStartsOn: 0 });
       return eachDayOfInterval({ start, end });
   };
+
+  const goToPreviousWeek = () => onWeekChange?.(subWeeks(referenceDate, 1));
+  const goToNextWeek = () => onWeekChange?.(addWeeks(referenceDate, 1));
 
   const formatHour = (hour) => {
         if (hour === 0) return "12a";
@@ -145,7 +154,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
       }));
   }
 
-  const weekDays = generateWeekDays(selectedDate ? new Date(selectedDate) : new Date());
+  const weekDays = generateWeekDays(referenceDate);
   const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
 
   return (
@@ -154,9 +163,21 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
             {/* ── Sticky header ── */}
             <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
 
-                {/* Row 1: day letter + date number */}
-                <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: '38px repeat(7, 1fr)' }}>
-                    <div />
+                {/* Month label — reflects whichever week is currently shown */}
+                <div className="flex items-center justify-center pt-1">
+                    <h2 className="text-xs font-semibold text-gray-800">
+                        {format(referenceDate, 'MMMM')}
+                    </h2>
+                </div>
+
+                {/* Row 1: prev/next week arrows + day letter + date number, all on one line */}
+                <div className="grid border-b border-gray-100 items-center" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
+                    <button
+                        onClick={goToPreviousWeek}
+                        className="justify-self-center w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 text-base leading-none"
+                    >
+                        ‹
+                    </button>
                     {weekDays.map((day, i) => {
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const isToday = dateKey === currentDate;
@@ -172,11 +193,17 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             </div>
                         );
                     })}
+                    <button
+                        onClick={goToNextWeek}
+                        className="justify-self-center w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 text-base leading-none"
+                    >
+                        ›
+                    </button>
                 </div>
 
                 {/* Row 2: all-day tasks (only rendered if tasks exist this week) */}
                 {hasAnyTasks && (
-                    <div className="grid" style={{ gridTemplateColumns: '38px repeat(7, 1fr)' }}>
+                    <div className="grid" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
                         <div className="flex items-center justify-end pr-1">
                             <span className="text-[9px] text-gray-300 leading-none">all‑day</span>
                         </div>
@@ -198,6 +225,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 </div>
                             );
                         })}
+                        <div />
                     </div>
                 )}
             </div>
@@ -214,7 +242,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         <div
                             key={hour}
                             className="grid items-start"
-                            style={{ gridTemplateColumns: '38px repeat(7, 1fr)', height: HOUR_HEIGHT }}
+                            style={{ gridTemplateColumns: GRID_TEMPLATE, height: HOUR_HEIGHT }}
                         >
                             <div className="text-[10px] text-gray-400 text-right pr-2 -mt-2 select-none">
                                 {formatHour(hour)}
@@ -222,6 +250,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             {Array.from({ length: 7 }).map((_, d) => (
                                 <div key={d} className="border-b border-gray-100 h-full" />
                             ))}
+                            <div />
                         </div>
                     ))}
 
@@ -230,7 +259,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         className="absolute top-0 left-0 right-0 pointer-events-none"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '38px repeat(7, 1fr)',
+                            gridTemplateColumns: GRID_TEMPLATE,
                             height: TOTAL_HOURS * HOUR_HEIGHT,
                         }}
                     >
@@ -273,6 +302,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 </div>
                             );
                         })}
+                        <div />
                     </div>
 
                     {/* Current time line — only on today's column */}
@@ -280,7 +310,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         className="absolute top-0 left-0 right-0 pointer-events-none"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '38px repeat(7, 1fr)',
+                            gridTemplateColumns: GRID_TEMPLATE,
                             height: TOTAL_HOURS * HOUR_HEIGHT,
                         }}
                     >
@@ -303,6 +333,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 </div>
                             );
                         })}
+                        <div />
                     </div>
 
                 </div>

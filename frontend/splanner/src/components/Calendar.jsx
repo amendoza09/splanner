@@ -102,6 +102,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
             onSelectedEvent={setSelectedEvent}
             onEventOpen={setEventOpen}
             onDeleteEvent={onDeleteEvent}
+            onWeekChange={setSelectedDate}
           />
         )}
         {view === "month" && (
