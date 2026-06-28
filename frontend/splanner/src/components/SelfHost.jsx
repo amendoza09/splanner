@@ -47,7 +47,7 @@ const SelfHost = () => {
           </h2>
           <p className="text-gray-500 text-sm">
             These steps assume the reference setup: a Raspberry Pi with a touchscreen, booting
-            straight into the kiosk build mounted on a wall. That's a recommendation, not a
+            straight into the kiosk build. That's a recommendation, not a
             requirement. Anything that runs Python and Node works, from an old laptop to a mini
             PC to a regular monitor with a mouse and keyboard.
           </p>

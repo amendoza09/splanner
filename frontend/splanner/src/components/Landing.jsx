@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FaGithub } from "react-icons/fa";
 import Header from "./Header";
 import Reveal from "./Reveal";
 import AdRail from "./AdRail";
@@ -38,11 +39,11 @@ const Landing = () => {
 
       <Reveal as="section" className="flex flex-col items-center text-center px-6 pt-16 pb-12 max-w-2xl mx-auto">
         <h1 className="text-4xl sm:text-5xl leading-tight text-gray-900 mb-5" style={displayFont}>
-          A shared calendar your whole household actually uses
+          A shared calendar your group actually uses
         </h1>
         <p className="text-gray-500 mb-8 max-w-md">
-          Create a group, share the code, and everyone's events, chores, and schedules stay in
-          sync — no accounts required.
+          Families, roommates, teams, anyone. Create a group, share the code, and everyone's
+          events, chores, and schedules stay in sync — no accounts required.
         </p>
         <div className="flex gap-3">
           <Link
@@ -85,11 +86,12 @@ const Landing = () => {
       <Reveal as="section" className="px-6 py-20 bg-white border-y border-gray-100">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl text-gray-900 mb-4" style={displayFont}>
-            Built for a wall-mounted display
+            Built for any group
           </h2>
           <p className="text-gray-500 mb-10 max-w-md mx-auto">
-            Splanner runs great as a dedicated family command center — mount a Raspberry Pi
-            with a touchscreen on the wall and it boots straight into your calendar.
+            Splanner runs great as a dedicated command center for any household, apartment, or
+            shared space. Just connect a Raspberry Pi with any touchscreen display and it boots
+            straight into your calendar.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-left">
             {PI_POINTS.map((p) => (
@@ -109,9 +111,20 @@ const Landing = () => {
         >
           Run your own instance
         </Link>
-        <Link to="/manual" className="text-sm font-medium text-gray-400 hover:text-gray-600 underline">
-          User Manual
-        </Link>
+        <div className="flex items-center gap-5">
+          <Link to="/manual" className="text-sm font-medium text-gray-400 hover:text-gray-600 underline">
+            User Manual
+          </Link>
+          <a
+            href="https://github.com/amendoza09/splanner"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-gray-600"
+          >
+            <FaGithub className="text-base" />
+            GitHub
+          </a>
+        </div>
       </Reveal>
     </div>
   );

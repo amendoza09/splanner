@@ -34,13 +34,13 @@ const UserManual = () => {
           </h1>
           <p className="text-gray-500">
             Everything Splanner can do, in one place. No accounts, no settings to dig through —
-            just a calendar your whole household shares.
+            just a calendar your whole group shares.
           </p>
         </Reveal>
 
         <Section title="Getting started">
           <p>
-            Splanner doesn't use accounts. Instead, your household is a <strong>group</strong>{" "}
+            Splanner doesn't use accounts. Instead, your group is
             identified by a 5-character code.
           </p>
           <List
