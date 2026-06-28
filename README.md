@@ -105,7 +105,7 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 ### Environment Variables
 
-`backend/.env` is gitignored — create it yourself as shown above. `frontend/splanner/.env` is currently tracked in the repo (it only holds a non-secret backend URL); replace it with your own value rather than relying on what's committed.
+Both `backend/.env` and `frontend/splanner/.env` are gitignored — create them yourself as shown above.
 
 #### Frontend — `frontend/splanner/.env`
 

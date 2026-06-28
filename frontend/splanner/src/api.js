@@ -6,7 +6,6 @@ export const API = axios.create({
   baseURL: API_URL,
 });
 
-console.log(process.env.REACT_APP_API_URL);
 const socket = io(API_URL);
 
 export const getGroupByCode = async (groupCode) => {
