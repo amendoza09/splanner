@@ -3,6 +3,7 @@ import logo from '../assets/splanner-logo.png';
 
 const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, statusCode }) => {
   const [code, setCode] = useState("");
+  const busy = loadingJoin || loadingCreate;
 
   return (
     <div style={{
@@ -27,15 +28,6 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
           max-width: 320px;
         }
 
-        .logo-wrap {
-          margin-bottom: 3rem;
-        }
-
-        .logo-wrap img {
-          height: 44px;
-          object-fit: contain;
-        }
-
         .code-input {
           width: 100%;
           border: none;
@@ -43,7 +35,7 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
           padding: 12px 0;
           text-align: center;
           font-size: 24px;
-          font-family: 'DM Mono', 'Courier New', monospace;
+          font-family: 'Courier New', monospace;
           font-weight: 500;
           letter-spacing: 0.3em;
           color: #1a1a1a;
@@ -163,11 +155,14 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
         {statusCode === 404 && (
           <p className="error-msg">No group found with that code</p>
         )}
+        {statusCode === "unreachable" && (
+          <p className="error-msg">Can't reach the server. Please try again.</p>
+        )}
 
         <button
           className="btn-join"
           onClick={() => onSubmit(code)}
-          disabled={loadingJoin || code.length < 5}
+          disabled={busy || code.length < 5}
         >
           {loadingJoin ? "Joining…" : "Join Group"}
         </button>
@@ -181,7 +176,7 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
         <button
           className="btn-create"
           onClick={onCreateGroup}
-          disabled={loadingCreate}
+          disabled={busy}
         >
           {loadingCreate ? "Creating…" : "Create New Group"}
         </button>

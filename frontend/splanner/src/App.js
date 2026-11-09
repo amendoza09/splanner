@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import GroupCodeScreen from './components/GroupCode';
 import Calendar from './components/Calendar';
 import Sidebar from './components/Sidebar';
@@ -16,8 +16,11 @@ const socket = io(SOCKET_URL, {
   reconnectionDelayMax: 10000,
 });
 
+const normalizeMembers = (users) => users.map(user => ({ ...user, events: user.events ?? [] }));
+
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [members, setMembers] = useState([]);
   const [groupCode, setGroupCode] = useState(null);
   const [loadingJoin, setLoadingJoin] = useState(false);
@@ -29,40 +32,49 @@ function App() {
   // broadcast it triggers doesn't log this tab itself out (see the
   // "group_code_changed" listener below).
   const selfRotatingRef = useRef(false);
+  // Mirrors groupCode synchronously, so a response that lands after a logout or
+  // group switch can tell it no longer applies.
+  const codeRef = useRef(null);
+  const fetching = useRef(false);
+  const fetchAgain = useRef(false);
+  const creating = useRef(false);
 
-  const enterGroup = async (code) => {
-    try {
-      const res = await getGroupByCode(code);
-      if (!res || res.status !== 200) { setStatus(404); return; }
-      const normalizedMembers = res.users.map(user => ({ ...user, events: user.events ?? [] }));
-      setStatus(res.status);
-      setGroupCode(code);
-      setMembers(normalizedMembers);
-      localStorage.setItem("groupCode", code);
-    } catch (e) {
-      setStatus(404);
-    }
+  const applyGroup = (code, res) => {
+    setStatus(res.status);
+    codeRef.current = code;
+    setGroupCode(code);
+    setMembers(normalizeMembers(res.users));
+    localStorage.setItem("groupCode", code);
   };
 
-  const handleLogout = () => {
-    if (groupCode) socket.emit("leave_group", { group_code: groupCode });
-    localStorage.removeItem("groupCode");
+  const clearSession = useCallback(() => {
+    // Another tab may have already saved a newer code; only forget our own.
+    if (localStorage.getItem("groupCode") === codeRef.current) {
+      localStorage.removeItem("groupCode");
+    }
+    codeRef.current = null;
     setGroupCode(null);
     setMembers([]);
+  }, []);
+
+  const enterGroup = async (code) => {
+    const res = await getGroupByCode(code);
+    if (res.status === 200) applyGroup(code, res);
+    else setStatus(res.status === 404 ? 404 : "unreachable");
   };
 
   const handleJoinGroup = async (code) => {
     try {
       setLoadingJoin(true);
       await enterGroup(code);
-    } catch (e) {
-      alert("Invalid group code");
     } finally {
       setLoadingJoin(false);
     }
   };
 
   const handleCreateGroup = async () => {
+    if (creating.current) return;
+    creating.current = true;
     try {
       setStatus(null);
       setLoadingCreate(true);
@@ -71,6 +83,7 @@ function App() {
     } catch (e) {
       alert("Cannot make groups at this time");
     } finally {
+      creating.current = false;
       setLoadingCreate(false);
     }
   };
@@ -83,14 +96,31 @@ function App() {
     setTimeout(() => { selfRotatingRef.current = false; }, 5000);
     const data = await regenerateGroupCode(groupCode);
     localStorage.setItem("groupCode", data.group_code);
+    codeRef.current = data.group_code;
     setGroupCode(data.group_code);
   };
 
+  // Runs one request at a time so responses can't land out of order; a call
+  // made during a request queues one more pass. A failed fetch keeps what's on
+  // screen, but a 404 means the code is no longer valid (e.g. it was rotated
+  // while this device was offline and missed the broadcast).
   const refresh = useCallback(async () => {
-    if (!groupCode) return;
-    const data = await getGroupByCode(groupCode);
-    setMembers(data.users.map(u => ({ ...u, events: u.events ?? [] })));
-  }, [groupCode]);
+    if (fetching.current) { fetchAgain.current = true; return; }
+    fetching.current = true;
+    try {
+      do {
+        fetchAgain.current = false;
+        const code = codeRef.current;
+        if (!code) break;
+        const res = await getGroupByCode(code);
+        if (code !== codeRef.current) continue;
+        if (res.status === 200) setMembers(normalizeMembers(res.users));
+        else if (res.status === 404 && !selfRotatingRef.current) clearSession();
+      } while (fetchAgain.current);
+    } finally {
+      fetching.current = false;
+    }
+  }, [clearSession]);
 
   // On mount — restore saved group, or auto-create one if the user
   // arrived here via a "Create Group" link
@@ -102,13 +132,20 @@ function App() {
       let cancelled = false;
       let retryTimer;
       const restore = async () => {
-        const { retryable } = await getGroupByCode(savedCode);
+        const res = await getGroupByCode(savedCode);
         if (cancelled) return;
-        if (retryable) {
+        if (res.retryable) {
           retryTimer = setTimeout(restore, 5000);
           return;
         }
-        await enterGroup(savedCode);
+        if (res.status === 200) {
+          applyGroup(savedCode, res);
+        } else if (res.status === 404) {
+          // The group is really gone; forget the code so Landing stops
+          // redirecting here.
+          localStorage.removeItem("groupCode");
+          setStatus(404);
+        }
         setCheckingSession(false);
       };
       restore();
@@ -118,19 +155,32 @@ function App() {
       };
     }
     setCheckingSession(false);
-    if (location.state?.autoCreate) {
-      handleCreateGroup();
-    }
   }, []);
 
-  // When groupCode is set, join the socket room
+  // A "Create Group" link is a one-time request. Clear it right away, because
+  // history state survives a reload and would otherwise create another group.
+  useEffect(() => {
+    if (!location.state?.autoCreate) return;
+    navigate(location.pathname, { replace: true, state: null });
+    if (!localStorage.getItem("groupCode")) handleCreateGroup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
+
+  // Refresh once the server confirms the join, so a change made just before
+  // it can't be missed. A rejected join also refreshes, which finds the 404.
+  const joinRoom = useCallback((code) => {
+    socket.emit("join_group", { group_code: code }, () => refresh());
+  }, [refresh]);
+
+  // The "connect" listener below handles joining when offline, and the server
+  // drops room membership on disconnect, so nothing needs to be queued.
   useEffect(() => {
     if (!groupCode) return;
-    socket.emit("join_group", { group_code: groupCode });
+    if (socket.connected) joinRoom(groupCode);
     return () => {
-      socket.emit("leave_group", { group_code: groupCode });
+      if (socket.connected) socket.emit("leave_group", { group_code: groupCode });
     };
-  }, [groupCode]);
+  }, [groupCode, joinRoom]);
 
   // Listen for the group's code changing or the group being deleted —
   // these reach every connected client, not just the one that requested it.
@@ -143,22 +193,15 @@ function App() {
         selfRotatingRef.current = false;
         return;
       }
-      localStorage.removeItem("groupCode");
-      setGroupCode(null);
-      setMembers([]);
-    };
-    const onGroupDeleted = () => {
-      localStorage.removeItem("groupCode");
-      setGroupCode(null);
-      setMembers([]);
+      clearSession();
     };
     socket.on("group_code_changed", onCodeChanged);
-    socket.on("group_deleted", onGroupDeleted);
+    socket.on("group_deleted", clearSession);
     return () => {
       socket.off("group_code_changed", onCodeChanged);
-      socket.off("group_deleted", onGroupDeleted);
+      socket.off("group_deleted", clearSession);
     };
-  }, []);
+  }, [clearSession]);
 
   // Listen for server-side refresh broadcasts
   useEffect(() => {
@@ -166,8 +209,7 @@ function App() {
     socket.on("refresh", handler);
 
     const onReconnect = () => {
-      if (groupCode) socket.emit("join_group", { group_code: groupCode });
-      refresh();
+      if (groupCode) joinRoom(groupCode);
     };
     socket.on("connect", onReconnect);
 
@@ -175,7 +217,7 @@ function App() {
       socket.off("refresh", handler);
       socket.off("connect", onReconnect);
     };
-  }, [refresh, groupCode]);
+  }, [refresh, groupCode, joinRoom]);
 
   if (checkingSession) {
     return (
@@ -210,7 +252,7 @@ function App() {
       <Sidebar
         members={members}
         groupCode={groupCode}
-        onLogout={handleLogout}
+        onLogout={clearSession}
         onRegenerateCode={handleRegenerateCode}
         onNewMember={refresh}
         onUpdate={refresh}
@@ -226,7 +268,6 @@ function App() {
           onNewEvent={refresh}
           onDeleteEvent={refresh}
           onUpdate={refresh}
-          onRefresh={refresh}
           onOpenMenu={() => setDrawerOpen(true)}
         />
       </div>

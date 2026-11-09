@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { FaGithub } from "react-icons/fa";
 import Header from "./Header";
 import Reveal from "./Reveal";
@@ -21,15 +20,9 @@ const PI_POINTS = [
 const displayFont = { fontFamily: "var(--font-display)" };
 
 const Landing = () => {
-  const navigate = useNavigate();
-
   // Returning users (and the kiosk/Pi build) already have a saved group —
   // skip the marketing page and go straight into the calendar.
-  useEffect(() => {
-    if (localStorage.getItem("groupCode")) {
-      navigate("/app", { replace: true });
-    }
-  }, [navigate]);
+  if (localStorage.getItem("groupCode")) return <Navigate to="/app" replace />;
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">

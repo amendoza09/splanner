@@ -1,12 +1,10 @@
 import axios from "axios";
-import { io } from "socket.io-client";
 
 const API_URL = process.env.REACT_APP_API_URL;
 export const API = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
 });
-
-const socket = io(API_URL);
 
 export const getGroupByCode = async (groupCode) => {
     try {
@@ -18,20 +16,10 @@ export const getGroupByCode = async (groupCode) => {
         };
     } catch(err) {
         console.error("failed to fetch group:", err);
-        return { users: [], retryable: !err.response || err.response.status >= 500 };
+        return { users: [], status: err.response?.status, retryable: !err.response || err.response.status >= 500 };
     }
 };
 
-
-export const getMembers = async (groupCode) => {
-    try {
-        const res = await API.get(`/group/${groupCode}/members`);
-        return res.data;
-    } catch(err) {
-        console.error("failed to fetch group:", err);
-        return { users: [] };
-    }
-};
 
 export const addUserToGroup = async (groupCode, member) => {
   const res = await API.post(`/group/${groupCode}/members`, member);
@@ -39,15 +27,8 @@ export const addUserToGroup = async (groupCode, member) => {
 };
 
 export const addEventToUser = async (groupCode, userId, event) => {
-  try{
-    const res = await API.post(`/members/${userId}/events`, event, { params: { group_code: groupCode } });
-    socket.emit("event-added", res.data);
-
-    return res.data
-  } catch (err) {
-    console.error("failed to create event", err);
-  }
-
+  const res = await API.post(`/members/${userId}/events`, event, { params: { group_code: groupCode } });
+  return res.data;
 };
 
 export const createGroup = async () => {
@@ -124,12 +105,7 @@ const getGrid = async (lat, lon) => {
   );
   return res.data;
 };
- 
-// Call this to reset location (e.g. from Settings if the Pi moves)
-export const clearCachedLocation = () => {
-  localStorage.removeItem(COORDS_KEY);
-  localStorage.removeItem(GRID_KEY);
-};
+
 export const getChores = async (groupCode) => {
   try {
     const res = await API.get(`/group/${groupCode}/chores`);

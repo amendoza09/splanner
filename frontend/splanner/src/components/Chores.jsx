@@ -1,42 +1,63 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { addChore, toggleChore, deleteChore } from "../api";
 import { FaRegTrashAlt } from "react-icons/fa";
 
-const Chores = ({ members, groupCode, chores, setChores, fetchChores }) => {
+const Chores = ({ members, groupCode, chores, setChores, fetchChores, discardPendingChoreFetch }) => {
   const [adding, setAdding] = useState(null); // user_id of member being added to
   const [newChoreText, setNewChoreText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const togglingIds = useRef(new Set());
 
   const handleAdd = async (userId) => {
-    if (!newChoreText.trim()) return;
+    if (submitting || !newChoreText.trim()) return;
     try {
+      setSubmitting(true);
       await addChore(groupCode, { user_id: userId, title: newChoreText.trim(), completed: false });
       setNewChoreText("");
       setAdding(null);
       fetchChores();
     } catch (e) {
       console.error("Failed to add chore", e);
+      alert("Could not add this chore");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleToggle = async (chore) => {
+    // Ignore taps until the previous one lands, so two PATCHes for the same
+    // chore can't reach the server out of order.
+    if (togglingIds.current.has(chore.chore_id)) return;
+    togglingIds.current.add(chore.chore_id);
     try {
       // Optimistic update
+      discardPendingChoreFetch();
       setChores(prev =>
         prev.map(c => c.chore_id === chore.chore_id ? { ...c, completed: !c.completed } : c)
       );
       await toggleChore(groupCode, chore.chore_id, !chore.completed);
     } catch (e) {
       console.error("Failed to toggle chore", e);
-      fetchChores(); // revert on error
+      // Undo directly, since fetchChores keeps the current list when offline.
+      setChores(prev =>
+        prev.map(c => c.chore_id === chore.chore_id ? { ...c, completed: chore.completed } : c)
+      );
+      alert("Could not update this chore");
+      fetchChores();
+    } finally {
+      togglingIds.current.delete(chore.chore_id);
     }
   };
 
-  const handleDelete = async (choreId) => {
+  const handleDelete = async (chore) => {
     try {
-      setChores(prev => prev.filter(c => c.chore_id !== choreId));
-      await deleteChore(groupCode, choreId);
+      discardPendingChoreFetch();
+      setChores(prev => prev.filter(c => c.chore_id !== chore.chore_id));
+      await deleteChore(groupCode, chore.chore_id);
     } catch (e) {
       console.error("Failed to delete chore", e);
+      setChores(prev => prev.some(c => c.chore_id === chore.chore_id) ? prev : [...prev, chore]);
+      alert("Could not delete this chore");
       fetchChores();
     }
   };
@@ -57,7 +78,7 @@ const Chores = ({ members, groupCode, chores, setChores, fetchChores }) => {
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                   style={{ backgroundColor: member.color }}
                 >
-                  {member.name[0].toUpperCase()}
+                  {member.name?.[0]?.toUpperCase() ?? "?"}
                 </div>
                 <span className="font-semibold text-sm text-gray-700">{member.name}</span>
                 {memberChores.length > 0 && (
@@ -86,7 +107,7 @@ const Chores = ({ members, groupCode, chores, setChores, fetchChores }) => {
                 />
                 <button
                   onClick={() => handleAdd(member.user_id)}
-                  disabled={!newChoreText.trim()}
+                  disabled={submitting || !newChoreText.trim()}
                   className="px-3 py-2 rounded-lg bg-[var(--green)] text-sm font-semibold disabled:opacity-40"
                 >
                   Add
@@ -122,8 +143,8 @@ const Chores = ({ members, groupCode, chores, setChores, fetchChores }) => {
                       {chore.title}
                     </span>
                     <button
-                      onClick={() => handleDelete(chore.chore_id)}
-                      className="text-gray-300 hover:text-red-400 active:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      onClick={() => handleDelete(chore)}
+                      className="text-gray-300 hover:text-red-400 active:text-red-500 transition-colors [@media(hover:hover)_and_(pointer:fine)]:opacity-0 group-hover:opacity-100"
                       style={{ minHeight: 28, minWidth: 28 }}
                     >
                       <FaRegTrashAlt size={13} />

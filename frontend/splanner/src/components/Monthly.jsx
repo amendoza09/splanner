@@ -4,7 +4,6 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval,
 
 const MonthlyView = ({ members, onDayPress }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
   const currentDate = format(new Date(), 'yyyy-MM-dd');
@@ -42,11 +41,6 @@ const MonthlyView = ({ members, onDayPress }) => {
     });
     return map;
   }, [members]);
-
-  const handleDayPress = (day) => {
-    setSelectedDate(format(day, 'yyyy-MM-dd'));
-    onDayPress(day);
-  };
 
   const monthDays = generateMonthDays(currentMonth);
 
@@ -107,7 +101,6 @@ const MonthlyView = ({ members, onDayPress }) => {
 
           const dateKey = format(item, 'yyyy-MM-dd');
           const isToday = dateKey === currentDate;
-          const isSelected = dateKey === selectedDate;
           const events = eventsByDate[dateKey] || [];
           const MAX_BARS = 2;
           const overflow = events.length - MAX_BARS;
@@ -115,7 +108,7 @@ const MonthlyView = ({ members, onDayPress }) => {
           return (
             <div
               key={dateKey}
-              onClick={() => handleDayPress(item)}
+              onClick={() => onDayPress(item)}
               className="border-b border-r border-gray-100 cursor-pointer active:bg-gray-50 flex flex-col p-1 min-h-0 overflow-hidden"
             >
               {/* Date number */}
@@ -124,14 +117,13 @@ const MonthlyView = ({ members, onDayPress }) => {
                   className={`
                     text-[11px] w-5 h-5 flex items-center justify-center rounded-full leading-none
                     ${isToday ? 'bg-[var(--red)] text-white font-semibold' : 'text-gray-700'}
-                    ${isSelected && !isToday ? 'ring-1 ring-gray-400 font-semibold' : ''}
                   `}
                 >
                   {format(item, 'd')}
                 </span>
               </div>
 
-              {/* Mobile: compact color bars, one per event, up to 3 — no
+              {/* Mobile: compact color bars, one per event, up to MAX_BARS — no
                   room (or hover) for titles at this size */}
               <div className="flex flex-col gap-[2px] md:hidden">
                 {events.slice(0, MAX_BARS).map((event, j) => (
@@ -149,7 +141,7 @@ const MonthlyView = ({ members, onDayPress }) => {
                 )}
               </div>
 
-              {/* Tablet/desktop: room for truncated title chips, up to 3 */}
+              {/* Tablet/desktop: room for truncated title chips, up to MAX_BARS */}
               <div className="hidden md:flex md:flex-col gap-[2px]">
                 {events.slice(0, MAX_BARS).map((event, j) => (
                   <div

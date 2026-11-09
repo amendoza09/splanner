@@ -16,18 +16,19 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [notes, setNotes] = useState("");
   const [task, setTask] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (event) {
       setTitle(event.title);
       setStartTime(new Date(event.start_time));
       setEndTime(new Date(event.end_time));
-      setSelectedMember(event.member);
+      setSelectedMemberId(event.user_id);
       setNotes(event.notes || "");
       setTask(event.is_task);
       setIsEditing(false);
@@ -36,6 +37,8 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
   }, [event]);
 
   if (!isOpen) return null;
+
+  const selectedMemberName = members.find((m) => m.user_id === selectedMemberId)?.name ?? event?.member;
 
   const deleteAnEvent = async () => {
     try {
@@ -53,23 +56,37 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
   };
 
   const handleSave = async () => {
-    const day = toISOLocal(startTime).slice(0, 10);
+    if (saving) return;
+    const start = toISOLocal(startTime);
+    const end = toISOLocal(endTime);
+    const day = start.slice(0, 10);
 
-    await updateEvent(groupCode, event.user_id, event.id, {
-      title,
-      start_time: task ? `${day}T00:00:00` : toISOLocal(startTime),
-      end_time: task ? `${day}T23:59:59` : toISOLocal(endTime),
-      user_id: selectedMember?.user_id ?? event.user_id,
-      notes,
-      is_task: task,
-    });
-    onUpdate?.();
-    onClose();
+    if (start.includes("NaN") || (!task && end.includes("NaN"))) { alert("Please provide valid times"); return; }
+    if (!task && end <= start) { alert("End time must be after the start time"); return; }
+
+    try {
+      setSaving(true);
+      await updateEvent(groupCode, event.user_id, event.id, {
+        title,
+        start_time: task ? `${day}T00:00:00` : start,
+        end_time: task ? `${day}T23:59:59` : end,
+        user_id: selectedMemberId ?? event.user_id,
+        notes,
+        is_task: task,
+      });
+      onUpdate?.();
+      onClose();
+    } catch (err) {
+      console.error("Failed to update event", err);
+      alert("Could not save this event");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cancelEdit = () => {
     setTitle(event.title); setStartTime(event.start_time); setEndTime(event.end_time);
-    setSelectedMember(event.member); setNotes(event.notes || ""); setTask(event.is_task);
+    setSelectedMemberId(event.user_id); setNotes(event.notes || ""); setTask(event.is_task);
     setIsEditing(false);
   };
 
@@ -92,7 +109,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
             {!isEditing ? (
               <>
                 <h3 className="font-bold text-base">{title}</h3>
-                <p className="text-sm text-gray-500">{typeof selectedMember === 'string' ? selectedMember : selectedMember?.name}</p>
+                <p className="text-sm text-gray-500">{selectedMemberName}</p>
                 {!task && <p className="text-sm text-gray-500">{formatTime(startTime)} – {formatTime(endTime)}</p>}
                 {notes ? <p className="text-sm mt-1">{notes}</p> : null}
               </>
@@ -103,9 +120,9 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
                   {members.map((m) => (
                     <button key={m.user_id}
                       className={`px-3 h-9 rounded-full text-sm font-medium
-                        ${(selectedMember === m.name || selectedMember?.user_id === m.user_id) ? 'ring-2 ring-gray-400' : ''}`}
-                      style={{ backgroundColor: (selectedMember === m.name || selectedMember?.user_id === m.user_id) ? m.color : '#e5e7eb' }}
-                      onClick={() => setSelectedMember(m)}
+                        ${selectedMemberId === m.user_id ? 'ring-2 ring-gray-400' : ''}`}
+                      style={{ backgroundColor: selectedMemberId === m.user_id ? m.color : '#e5e7eb' }}
+                      onClick={() => setSelectedMemberId(m.user_id)}
                     >{m.name}</button>
                   ))}
                 </div>
@@ -131,7 +148,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
               </div>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl ml-2">✕</button>
+          <button onClick={onClose} disabled={saving} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl ml-2 disabled:opacity-40">✕</button>
         </div>
 
         {/* Actions */}
@@ -149,9 +166,9 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
             </>
           ) : (
             <>
-              <button onClick={handleSave}
-                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm shadow-md">
-                Save
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm shadow-md disabled:opacity-40 disabled:shadow-none">
+                {saving ? "Saving…" : "Save"}
               </button>
               <button onClick={cancelEdit}
                 className="flex-1 py-3 rounded-xl bg-gray-100 text-sm font-medium">

@@ -213,13 +213,8 @@ class EventCreate(BaseModel):
     is_task: bool = False
     notes: str | None = Field(None, max_length=2000)
 
-@_app.post("/members/{user_id}/events")
-async def add_event(user_id: int, event: EventCreate, group_code: str, db: Session = Depends(get_db)):
-    user = verify_group_code(user_id, group_code, db)
-
-    created_events = []
-    start = event.start_time
-    end = event.end_time
+def split_into_days(start: datetime, end: datetime, is_task: bool) -> list[tuple[datetime, datetime]]:
+    """Return one (start, end) pair per calendar day; events are stored per day."""
     current_day = start.date()
     last_day = end.date()
 
@@ -229,13 +224,24 @@ async def add_event(user_id: int, event: EventCreate, group_code: str, db: Sessi
             detail=f"Event span cannot exceed {MAX_EVENT_SPAN_DAYS} days",
         )
 
+    days = []
     while current_day <= last_day:
         day_start = start if current_day == start.date() else datetime.combine(current_day, time.min)
         day_end = end if current_day == end.date() else datetime.combine(current_day, time.max)
-        if event.is_task:
+        if is_task:
             day_start = datetime.combine(current_day, time.min)
             day_end = datetime.combine(current_day, time.max)
+        days.append((day_start, day_end))
+        current_day += timedelta(days=1)
+    return days
 
+@_app.post("/members/{user_id}/events")
+async def add_event(user_id: int, event: EventCreate, group_code: str, db: Session = Depends(get_db)):
+    user = verify_group_code(user_id, group_code, db)
+
+    created_events = []
+
+    for day_start, day_end in split_into_days(event.start_time, event.end_time, event.is_task):
         new_event = Event(
             title=event.title,
             start_time=day_start,
@@ -246,7 +252,6 @@ async def add_event(user_id: int, event: EventCreate, group_code: str, db: Sessi
         )
         db.add(new_event)
         created_events.append(new_event)
-        current_day += timedelta(days=1)
 
     db.commit()
     for e in created_events:
@@ -308,6 +313,21 @@ async def update_event(
     for key, value in update_data.items():
         setattr(event, key, value)
 
+    # As on create, an event that now crosses midnight is stored per day: this
+    # event keeps the first day and each later day becomes a new event.
+    if event.start_time and event.end_time and event.end_time.date() > event.start_time.date():
+        days = split_into_days(event.start_time, event.end_time, event.is_task)
+        event.start_time, event.end_time = days[0]
+        for day_start, day_end in days[1:]:
+            db.add(Event(
+                title=event.title,
+                start_time=day_start,
+                end_time=day_end,
+                notes=event.notes,
+                user_id=event.user_id,
+                is_task=event.is_task,
+            ))
+
     db.commit()
     db.refresh(event)
 
@@ -326,7 +346,7 @@ async def update_event(
 # ── Members ───────────────────────────────────────────────────────────────────
 
 class AddUserRequest(BaseModel):
-    name: str = Field(..., max_length=100)
+    name: str = Field(..., min_length=1, max_length=100)
     color: str = Field(..., max_length=30)
 
 @_app.post("/group/{group_code}/members")
@@ -361,7 +381,7 @@ async def delete_member(user_id: int, group_code: str, db: Session = Depends(get
     return "user deleted"
 
 class UpdateUser(BaseModel):
-    name: Optional[str] = Field(None, max_length=100)
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
     color: Optional[str] = Field(None, max_length=30)
 
 @_app.patch("/group/{group_code}/members/{user_id}")
