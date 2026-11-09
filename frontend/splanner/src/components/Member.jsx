@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { FaRegEdit } from "react-icons/fa";
 import { updateUser, deleteUser } from "../api";
+import ConfirmDialog from "./ConfirmDialog";
 
 const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(member.name);
   const [color, setColor] = useState(member.color);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
-    setName(member.name); setColor(member.color); setIsEditing(false);
+    setName(member.name); setColor(member.color); setIsEditing(false); setConfirmingRemove(false);
   }, [member, isOpen]);
 
   if (!isOpen) return null;
@@ -19,8 +22,17 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
   };
 
   const deleteAUser = async () => {
-    try { await deleteUser(groupCode, member.user_id); onUserDelete(); }
-    catch (e) { alert("Could not delete user"); }
+    try {
+      setRemoving(true);
+      await deleteUser(groupCode, member.user_id);
+      onUserDelete();
+      onClose();
+    } catch (e) {
+      alert("Could not remove this person");
+    } finally {
+      setRemoving(false);
+      setConfirmingRemove(false);
+    }
   };
 
   return (
@@ -61,12 +73,24 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
                 className="flex-1 py-3 rounded-xl bg-gray-100 text-sm">Cancel</button>
             </>
           )}
-          <button onClick={deleteAUser}
+          <button onClick={() => setConfirmingRemove(true)}
             className="flex-1 py-3 rounded-xl bg-red-50 text-red-500 text-sm font-medium">
             Remove
           </button>
         </div>
       </div>
+
+      {confirmingRemove && (
+        <ConfirmDialog
+          title={`Remove ${member.name}?`}
+          message="This also deletes their events and chores for everyone in the group. It can't be undone."
+          confirmLabel="Yes, remove"
+          busyLabel="Removing…"
+          busy={removing}
+          onCancel={() => setConfirmingRemove(false)}
+          onConfirm={deleteAUser}
+        />
+      )}
     </div>
   );
 };

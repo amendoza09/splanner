@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { TbCalendarMonthFilled } from "react-icons/tb";
 import { MdCalendarViewWeek } from "react-icons/md";
 import { IoAddCircle } from "react-icons/io5";
+import { RiMenu3Line } from "react-icons/ri";
 
-import { getWeather } from "../api";
+import { getWeather, getChores } from "../api";
 
 import WeeklyView from "./Weekly";
 import MonthlyView from "./Monthly";
@@ -17,7 +18,7 @@ import rainIcon from '../assets/rainy.png';
 import cloudyIcon from '../assets/icon.png';
 import icon from '../assets/icon.png';
 
-const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onRefresh }) => {
+const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onRefresh, onOpenMenu }) => {
   const [view, setView] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [addEventOpen, setAddEventOpen] = useState(false);
@@ -25,6 +26,9 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [temp, setTemp] = useState("");
   const [weatherIcon, setWeatherIcon] = useState("");
+  const [chores, setChores] = useState([]);
+  const latestChoresFetch = useRef(0);
+  const pendingChores = chores.filter((c) => !c.completed).length;
 
   const getTemp = async () => {
     try {
@@ -44,12 +48,35 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
     return () => clearInterval(interval);
   }, []);
 
+  // Only the newest request may update the list. A failed fetch returns null,
+  // which keeps the chores already on screen.
+  const fetchChores = useCallback(async () => {
+    const fetchId = ++latestChoresFetch.current;
+    const data = await getChores(groupCode);
+    if (data && fetchId === latestChoresFetch.current) setChores(data);
+  }, [groupCode]);
+
+  // `members` gets a new value on every server "refresh" broadcast, including
+  // chore changes, so the shared list stays current without refetching on
+  // each visit to the chores tab.
+  useEffect(() => {
+    fetchChores();
+  }, [fetchChores, members]);
+
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       {/* Compact toolbar — single row */}
-      <div className="flex items-center justify-between pl-14 pr-3 md:px-5 py-1 border-b border-gray-200 bg-white shadow-sm relative z-10" style={{ height: 48 }}>
+      <div className="flex items-center justify-between px-3 md:px-5 py-1 border-b border-gray-200 bg-white shadow-sm relative z-10" style={{ height: 48 }}>
         {/* View toggles */}
         <div className="flex gap-1">
+          <button
+            onClick={onOpenMenu}
+            aria-label="Open menu"
+            className="md:hidden p-2 rounded-lg flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 transition-colors duration-150"
+            style={{ minHeight: 36, minWidth: 36 }}
+          >
+            <RiMenu3Line size={22} color="#374151" />
+          </button>
           <button
             onClick={() => setView("week")}
             className={`p-2 rounded-lg transition-colors duration-150 ${view === "week" ? "bg-gray-200" : "hover:bg-gray-100"}`}
@@ -66,11 +93,19 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
           </button>
           <button
             onClick={() => setView("chores")}
-            className={`p-2 rounded-lg text-lg transition-colors duration-150 ${view === "chores" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            className={`relative p-1 rounded-lg text-lg transition-colors duration-150 ${view === "chores" ? "bg-gray-200" : "hover:bg-gray-100"}`}
             style={{ minHeight: 36, minWidth: 36 }}
             title="Chores"
           >
             ✓
+            {pendingChores > 0 && (
+              <span
+                className="absolute -top-0.5 -right-1 min-w-[15px] h-4 px-0 rounded-full flex items-center justify-center text-[9px] font-semibold leading-none text-white"
+                style={{ backgroundColor: "var(--red)" }}
+              >
+                {pendingChores}
+              </span>
+            )}
           </button>
         </div>
 
@@ -112,7 +147,13 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
           />
         )}
         {view === "chores" && (
-          <Chores members={members} groupCode={groupCode} />
+          <Chores
+            members={members}
+            groupCode={groupCode}
+            chores={chores}
+            setChores={setChores}
+            fetchChores={fetchChores}
+          />
         )}
       </div>
 

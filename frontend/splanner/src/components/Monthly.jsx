@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval,
-  addMonths, subMonths, getDay } from 'date-fns';
+  addMonths, subMonths, getDay, isSameMonth } from 'date-fns';
 
 const MonthlyView = ({ members, onDayPress }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -48,11 +48,22 @@ const MonthlyView = ({ members, onDayPress }) => {
     onDayPress(day);
   };
 
+  const monthDays = generateMonthDays(currentMonth);
+
   return (
     <div className="flex flex-col h-full bg-white">
 
       {/* Month navigation */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+      <div className="relative flex items-center justify-between px-4 py-2 border-b border-gray-100">
+        {!isSameMonth(currentMonth, new Date()) && (
+          <button
+            onClick={() => setCurrentMonth(new Date())}
+            className="absolute right-14 top-1/2 -translate-y-1/2 text-[11px] font-medium text-gray-600 px-2 py-0.5 rounded-full border border-gray-300 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            style={{ minHeight: 'unset', minWidth: 'unset' }}
+          >
+            Today
+          </button>
+        )}
         <button
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 text-lg leading-none"
@@ -80,8 +91,11 @@ const MonthlyView = ({ members, onDayPress }) => {
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 flex-1">
-        {generateMonthDays(currentMonth).map((item, i) => {
+      <div
+        className="grid grid-cols-7 flex-1 min-h-0"
+        style={{ gridTemplateRows: `repeat(${monthDays.length / 7}, minmax(0, 1fr))` }}
+      >
+        {monthDays.map((item, i) => {
           if (!item) {
             return (
               <div
@@ -95,14 +109,14 @@ const MonthlyView = ({ members, onDayPress }) => {
           const isToday = dateKey === currentDate;
           const isSelected = dateKey === selectedDate;
           const events = eventsByDate[dateKey] || [];
-          const MAX_BARS = 8;
+          const MAX_BARS = 2;
           const overflow = events.length - MAX_BARS;
 
           return (
             <div
               key={dateKey}
               onClick={() => handleDayPress(item)}
-              className="border-b border-r border-gray-100 cursor-pointer active:bg-gray-50 flex flex-col p-1"
+              className="border-b border-r border-gray-100 cursor-pointer active:bg-gray-50 flex flex-col p-1 min-h-0 overflow-hidden"
             >
               {/* Date number */}
               <div className="flex justify-end mb-1">
@@ -129,9 +143,9 @@ const MonthlyView = ({ members, onDayPress }) => {
                   />
                 ))}
                 {overflow > 0 && (
-                  <span className="text-[9px] text-gray-400 leading-none mt-0.5">
+                  <div className="text-[9px] leading-tight font-medium text-center rounded bg-gray-200 text-gray-600">
                     +{overflow}
-                  </span>
+                  </div>
                 )}
               </div>
 
@@ -148,9 +162,9 @@ const MonthlyView = ({ members, onDayPress }) => {
                   </div>
                 ))}
                 {overflow > 0 && (
-                  <span className="text-[9px] text-gray-400 leading-none mt-0.5">
+                  <div className="text-[9px] leading-tight font-medium text-center rounded bg-gray-200 text-gray-600">
                     +{overflow}
-                  </span>
+                  </div>
                 )}
               </div>
             </div>

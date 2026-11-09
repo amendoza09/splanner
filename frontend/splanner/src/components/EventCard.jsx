@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { deleteEvent, updateEvent } from "../api";
 import { FaRegTrashAlt, FaRegEdit } from "react-icons/fa";
+import ConfirmDialog from "./ConfirmDialog";
+
+// Formats as local time. A bare "yyyy-MM-dd" from a date input is read as local
+// midnight, because new Date() would otherwise treat it as UTC and shift the day.
+const toISOLocal = (val) => {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(val) ? new Date(`${val}T00:00:00`) : new Date(val);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+};
 
 const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupCode }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -10,6 +19,8 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
   const [selectedMember, setSelectedMember] = useState(null);
   const [notes, setNotes] = useState("");
   const [task, setTask] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -20,27 +31,34 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
       setNotes(event.notes || "");
       setTask(event.is_task);
       setIsEditing(false);
+      setConfirmingDelete(false);
     }
   }, [event]);
 
   if (!isOpen) return null;
 
   const deleteAnEvent = async () => {
-    try { await deleteEvent(groupCode, event.user_id, event.id); onDelete?.(); onClose(); }
-    catch (err) { console.error("Failed to delete event", err); }
+    try {
+      setDeleting(true);
+      await deleteEvent(groupCode, event.user_id, event.id);
+      onDelete?.();
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete event", err);
+      alert("Could not delete this event");
+    } finally {
+      setDeleting(false);
+      setConfirmingDelete(false);
+    }
   };
 
   const handleSave = async () => {
-    const toISOLocal = (val) => {
-      const d = new Date(val);
-      const pad = (n) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-    };
+    const day = toISOLocal(startTime).slice(0, 10);
 
     await updateEvent(groupCode, event.user_id, event.id, {
       title,
-      start_time: toISOLocal(startTime),
-      end_time: toISOLocal(endTime),
+      start_time: task ? `${day}T00:00:00` : toISOLocal(startTime),
+      end_time: task ? `${day}T23:59:59` : toISOLocal(endTime),
       user_id: selectedMember?.user_id ?? event.user_id,
       notes,
       is_task: task,
@@ -63,7 +81,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
     return m === 0 ? `${h} ${p}` : `${h}:${m.toString().padStart(2, '0')} ${p}`;
   };
 
-  const toInputDT = (d) => d ? new Date(d).toISOString().slice(0, 16) : "";
+  const toInputDT = (d) => d ? toISOLocal(d).slice(0, 16) : "";
 
   return (
     <div className="sheet-backdrop fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
@@ -101,7 +119,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
                   </>
                 ) : (
                   <input type="date" className="border rounded-lg px-3 py-2"
-                    value={typeof startTime === 'string' ? startTime.slice(0, 10) : toInputDT(startTime).slice(0, 10)}
+                    value={toISOLocal(startTime).slice(0, 10)}
                     onChange={e => { setStartTime(e.target.value); setEndTime(e.target.value); }} />
                 )}
                 <input className="border rounded-lg px-3 py-2" placeholder="Notes"
@@ -124,7 +142,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 text-sm font-medium">
                 <FaRegEdit /> Edit
               </button>
-              <button onClick={deleteAnEvent}
+              <button onClick={() => setConfirmingDelete(true)}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 text-red-500 text-sm font-medium">
                 <FaRegTrashAlt /> Delete
               </button>
@@ -143,6 +161,18 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
           )}
         </div>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title={`Delete ${event.title}?`}
+          message={`${event.is_task ? "Only this day is deleted. " : ""}This removes it for everyone in the group and can't be undone.`}
+          confirmLabel="Yes, delete"
+          busyLabel="Deleting…"
+          busy={deleting}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={deleteAnEvent}
+        />
+      )}
     </div>
   );
 };
