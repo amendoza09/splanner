@@ -3,10 +3,8 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, 
 
 const HOUR_HEIGHT = 65;
 const TOTAL_HOURS = 24;
-// Left gutter holds hour labels (and now the prev-week arrow on row 1); right
-// gutter is new — it exists purely so the next-week arrow has a column that
-// lines up with every other grid row in this view (hour lines, events, now-line).
-const GRID_TEMPLATE = '36px repeat(7, 1fr) 36px';
+// Left gutter holds hour labels; the seven day columns run to the screen edge.
+const GRID_TEMPLATE = '36px repeat(7, 1fr)';
 const MOBILE_MAX_VISIBLE_TASKS = 1;
 const MAX_VISIBLE_TASKS = 2;
 
@@ -182,9 +180,25 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
 
                 {/* Month label — reflects whichever week is currently shown */}
                 <div className="relative flex items-center justify-center pt-1">
-                    <h2 className="text-xs font-semibold text-gray-800">
+                    <button
+                        onClick={goToPreviousWeek}
+                        aria-label="Previous week"
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 text-base leading-none"
+                        style={{ minHeight: 32, minWidth: 40 }}
+                    >
+                        ‹
+                    </button>
+                    <h2 className="w-20 text-center text-xs font-semibold text-gray-800">
                         {format(referenceDate, 'MMMM')}
                     </h2>
+                    <button
+                        onClick={goToNextWeek}
+                        aria-label="Next week"
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 text-base leading-none"
+                        style={{ minHeight: 32, minWidth: 40 }}
+                    >
+                        ›
+                    </button>
                     {!isSameWeek(referenceDate, new Date(), { weekStartsOn: 0 }) && (
                         <button
                             onClick={() => onWeekChange?.(new Date())}
@@ -196,14 +210,9 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                     )}
                 </div>
 
-                {/* Row 1: prev/next week arrows + day letter + date number, all on one line */}
+                {/* Row 1: day letter + date number */}
                 <div className="grid border-b border-gray-200 items-center" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
-                    <button
-                        onClick={goToPreviousWeek}
-                        className="justify-self-center w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-200 active:bg-gray-200 text-gray-500 text-base leading-none"
-                    >
-                        ‹
-                    </button>
+                    <div />
                     {weekDays.map((day, i) => {
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const isToday = dateKey === currentDate;
@@ -219,21 +228,44 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             </div>
                         );
                     })}
-                    <button
-                        onClick={goToNextWeek}
-                        className="justify-self-center w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 text-base leading-none"
-                    >
-                        ›
-                    </button>
                 </div>
 
                 {/* Row 2: all-day tasks (only rendered if tasks exist this week) */}
                 {hasAnyTasks && (
                     <div className="grid" style={{ gridTemplateColumns: GRID_TEMPLATE }}>
-                        <div className="flex items-center justify-end pr-1">
+                        <div className="flex flex-col items-end justify-center pr-1">
                             <span className="text-[9px] text-gray-500 leading-none">all‑day</span>
+                            {/* Single expand/collapse control for the whole all-day row */}
+                            {hasMobileOverflow && (
+                                <button
+                                    onClick={toggleAllDayExpanded}
+                                    aria-label="Show more all-day events"
+                                    className="md:hidden self-center w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs leading-none transition-colors"
+                                    style={{ minHeight: 'unset', minWidth: 'unset' }}
+                                >
+                                    <span
+                                        className={`inline-block transition-transform duration-300 ease-out ${allDayExpanded ? 'rotate-180' : ''}`}
+                                    >
+                                        ⌄
+                                    </span>
+                                </button>
+                            )}
+                            {hasDesktopOverflow && (
+                                <button
+                                    onClick={toggleAllDayExpanded}
+                                    aria-label="Show more all-day events"
+                                    className="hidden md:flex self-center w-6 h-6 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs leading-none transition-colors"
+                                    style={{ minHeight: 'unset', minWidth: 'unset' }}
+                                >
+                                    <span
+                                        className={`inline-block transition-transform duration-300 ease-out ${allDayExpanded ? 'rotate-180' : ''}`}
+                                    >
+                                        ⌄
+                                    </span>
+                                </button>
+                            )}
                         </div>
-                        {weekDays.map((day, dayIndex) => {
+                        {weekDays.map((day) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const tasks = tasksByDate[dateKey] || [];
 
@@ -244,7 +276,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                             const desktopExtra = tasks.slice(MAX_VISIBLE_TASKS);
 
                             return (
-                                <div key={dateKey} className={`flex flex-col gap-0.5 px-0.5 py-1 min-h-[35px] min-w-0 border-l border-gray-200 ${dayIndex === 6 ? 'border-r' : ''}`}>
+                                <div key={dateKey} className="flex flex-col gap-1 px-0.5 py-0.5 min-h-[30px] min-w-0">
                                     {/* Mobile: 1 task visible, rest reveal smoothly */}
                                     <div className="flex flex-col gap-0.5 md:hidden">
                                         {mobileCapped.map(renderTaskButton)}
@@ -277,33 +309,6 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 </div>
                             );
                         })}
-                        {/* Single expand/collapse control for the whole all-day row, far right */}
-                        <div className="flex items-center justify-center">
-                            {hasMobileOverflow && (
-                                <button
-                                    onClick={toggleAllDayExpanded}
-                                    className="md:hidden w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:text-gray-600 hover:bg-gray-100 text-xs leading-none transition-colors"
-                                >
-                                    <span
-                                        className={`inline-block transition-transform duration-300 ease-out ${allDayExpanded ? 'rotate-180' : ''}`}
-                                    >
-                                        ⌄
-                                    </span>
-                                </button>
-                            )}
-                            {hasDesktopOverflow && (
-                                <button
-                                    onClick={toggleAllDayExpanded}
-                                    className="hidden md:flex w-6 h-6 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs leading-none transition-colors"
-                                >
-                                    <span
-                                        className={`inline-block transition-transform duration-300 ease-out ${allDayExpanded ? 'rotate-180' : ''}`}
-                                    >
-                                        ⌄
-                                    </span>
-                                </button>
-                            )}
-                        </div>
                     </div>
                 )}
             </div>
@@ -327,9 +332,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 {formatHour(hour)}
                             </div>
                             {Array.from({ length: 7 }).map((_, d) => (
-                                <div key={d} className={`border-b border-gray-300 border-l border-l-gray-100 h-full ${d === 6 ? 'border-r border-r-gray-300' : ''}`} />
+                                <div key={d} className="border-t border-gray-300 border-l border-l-gray-100 h-full" />
                             ))}
-                            <div />
                         </div>
                     ))}
 
@@ -361,8 +365,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                           style={{
                                             top, height,
                                             backgroundColor: event.color,
-                                            width: `calc(${event.width * 100}% - 2px)`,
-                                            left: `calc(${event.left * 100}%)`,
+                                            width: `calc(${event.width * 100}% - 1px)`,
+                                            left: `calc(${event.left * 100}% + 1px)`,
                                           }}
                                         >
                                           <div className="px-1 pt-0.5 min-w-0 w-full">
@@ -370,7 +374,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                               {event.title}
                                             </div>
                                             {height > 28 && (
-                                              <div className="text-[9px] leading-tight opacity-75 text-center truncate min-w-0 w-full">
+                                              <div className="text-[10px] leading-tight opacity-75 text-center truncate min-w-0 w-full">
                                                 {formatEventTime(event.start_time)}
                                               </div>
                                             )}
@@ -381,7 +385,6 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 </div>
                             );
                         })}
-                        <div />
                     </div>
 
                     {/* Current time line — only on today's column */}
@@ -412,7 +415,6 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                                 </div>
                             );
                         })}
-                        <div />
                     </div>
 
                 </div>

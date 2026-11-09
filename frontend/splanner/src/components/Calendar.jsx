@@ -161,7 +161,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
       {view !== "chores" && (
         <button
           onClick={() => setAddEventOpen(true)}
-          className="absolute bottom-8 right-8 opacity-90 active:scale-95 transition-transform"
+          className="absolute bottom-12 md:bottom-8 right-8 opacity-90 active:scale-95 transition-transform"
           style={{ minHeight: 'unset', minWidth: 'unset' }}
         >
           <IoAddCircle size={56} color="var(--green)" />
