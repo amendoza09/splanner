@@ -24,6 +24,7 @@ function App() {
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [status, setStatus] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   // True while this tab's own regenerate-code request is in flight, so the
   // broadcast it triggers doesn't log this tab itself out (see the
   // "group_code_changed" listener below).
@@ -96,8 +97,25 @@ function App() {
   useEffect(() => {
     const savedCode = localStorage.getItem("groupCode");
     if (savedCode) {
-      enterGroup(savedCode).finally(() => setCheckingSession(false));
-      return;
+      // If the server is unreachable, keep waiting instead of treating the
+      // saved code as invalid, so an unattended reload can recover by itself.
+      let cancelled = false;
+      let retryTimer;
+      const restore = async () => {
+        const { retryable } = await getGroupByCode(savedCode);
+        if (cancelled) return;
+        if (retryable) {
+          retryTimer = setTimeout(restore, 5000);
+          return;
+        }
+        await enterGroup(savedCode);
+        setCheckingSession(false);
+      };
+      restore();
+      return () => {
+        cancelled = true;
+        clearTimeout(retryTimer);
+      };
     }
     setCheckingSession(false);
     if (location.state?.autoCreate) {
@@ -197,6 +215,8 @@ function App() {
         onNewMember={refresh}
         onUpdate={refresh}
         onUserDelete={refresh}
+        drawerOpen={drawerOpen}
+        onDrawerChange={setDrawerOpen}
       />
       {/* On mobile, Calendar takes full width since Sidebar is an overlay */}
       <div className="flex-1 min-w-0">
@@ -207,6 +227,7 @@ function App() {
           onDeleteEvent={refresh}
           onUpdate={refresh}
           onRefresh={refresh}
+          onOpenMenu={() => setDrawerOpen(true)}
         />
       </div>
     </div>

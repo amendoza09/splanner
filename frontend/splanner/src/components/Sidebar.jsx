@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { addUserToGroup } from '../api';
 import { IoSettingsOutline } from "react-icons/io5";
-import { RiMenu3Line, RiCloseLine } from "react-icons/ri";
+import { RiCloseLine } from "react-icons/ri";
 import AddMember from "./AddMember";
 import Member from './Member';
 import Settings from "./Settings";
 
-const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, onUpdate, onUserDelete }) => {
+const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, onUpdate, onUserDelete, drawerOpen, onDrawerChange }) => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleAddMember = async (member) => {
     try {
@@ -23,7 +22,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
     }
   };
 
-  const closeDrawer = () => setDrawerOpen(false);
+  const closeDrawer = () => onDrawerChange(false);
 
   // Desktop rail content (circles only)
   const desktopContent = (
@@ -62,20 +61,11 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
     <>
       {/* ── Desktop: static rail ── */}
       <div
-        className="hidden md:flex h-screen flex-col items-center border-r border-gray-200 bg-white shadow-[2px_0_8px_rgba(0,0,0,0.06)] relative z-10"
+        className="hidden md:flex h-screen flex-col items-center border-r border-gray-200 bg-white shadow-[2px_0_3px_rgba(0,0,0,0.03)] relative z-10"
         style={{ width: 64, minWidth: 64 }}
       >
         {desktopContent}
       </div>
-
-      {/* ── Mobile: hamburger button ── */}
-      <button
-        className="md:hidden fixed top-2 left-2 z-40 w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 shadow-sm active:bg-gray-50 transition-colors"
-        onClick={() => setDrawerOpen(true)}
-        style={{ minHeight: 44, minWidth: 44 }}
-      >
-        <RiMenu3Line size={22} color="#374151" />
-      </button>
 
       {/* ── Mobile: backdrop ── */}
       {drawerOpen && (

@@ -1,20 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import { getChores, addChore, toggleChore, deleteChore } from "../api";
+import { useState } from "react";
+import { addChore, toggleChore, deleteChore } from "../api";
 import { FaRegTrashAlt } from "react-icons/fa";
 
-const Chores = ({ members, groupCode }) => {
-  const [chores, setChores] = useState([]);
+const Chores = ({ members, groupCode, chores, setChores, fetchChores }) => {
   const [adding, setAdding] = useState(null); // user_id of member being added to
   const [newChoreText, setNewChoreText] = useState("");
-
-  const fetchChores = useCallback(async () => {
-    const data = await getChores(groupCode);
-    setChores(data);
-  }, [groupCode]);
-
-  useEffect(() => {
-    fetchChores();
-  }, [fetchChores]);
 
   const handleAdd = async (userId) => {
     if (!newChoreText.trim()) return;

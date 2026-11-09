@@ -9,14 +9,19 @@ const SLOT_IDS = {
   right: "9311210938",
 };
 
+const isElectron = typeof navigator !== "undefined" && /Electron/i.test(navigator.userAgent);
+
 const AdRail = ({ side }) => {
   useEffect(() => {
+    if (isElectron) return;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (e) {
       // AdSense script may be blocked (ad blocker) or not loaded yet
     }
   }, []);
+
+  if (isElectron) return null;
 
   return (
     <div

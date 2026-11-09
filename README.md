@@ -238,3 +238,38 @@ The backend broadcasts Socket.IO events to every client in a group's room (joine
 | `group_deleted` | `{}` | The group was deleted — connected clients should clear local state and return to the join/create screen |
 
 ---
+
+## 1.2.0 Update
+
+### Calendar
+
+- **Multi-day all-day events** — all-day events can have an optional end date. Each day is saved separately, so it can be edited or deleted on its own
+- **Today button** — jump back to the current week or month after navigating away
+- **Monthly view** — day boxes stay the same size. Each day shows up to three events, with a grey `+n` box for the rest
+- **Weekly view** — taller hour rows, light vertical lines between days, a full-height layout, and a 12a label that is no longer cut off
+
+### Chores
+
+- **Chore count badge** — the chores button shows how many chores are not done
+- **Faster chores tab** — opening the tab no longer refetches the list, and changes from other devices appear while it is open
+
+### Usability
+
+- **Confirmation popups** — removing a person or deleting an event now asks for confirmation first
+- **Loading state** — the Create button shows progress while an event saves and blocks duplicate submissions
+- **Mobile navigation** — the hamburger menu is now part of the top toolbar instead of a floating button
+
+### Desktop app
+
+- **No ads** — the desktop app no longer loads the ad script or shows ad rails
+- **Automatic recovery** — the app reloads itself if the page crashes
+- **Nightly reload** — the app reloads once during the 3 AM hour, device time, to stay healthy when left running
+
+### Fixes
+
+- Event edit forms and the automatic end time now use local time instead of UTC
+- Changing an all-day event's date no longer moves it to the previous day
+- The panel for a removed person now closes after they are removed
+- A saved group now waits and retries when the server is unreachable, instead of dropping to the join screen
+
+---

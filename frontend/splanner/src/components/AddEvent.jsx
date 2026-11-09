@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { addEventToUser } from '../api';
 
 const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
@@ -10,6 +11,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
   const [isTask, setIsTask] = useState(false);
   const [taskStartDate, setTaskStartDate] = useState("");
   const [taskEndDate, setTaskEndDate] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -19,25 +21,35 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
     if (!title || !selectedMember) { alert("Please fill out all fields"); return; }
     if (isTask && !taskStartDate) { alert("Please select a date"); return; }
     if (!isTask && (!startTime || !endTime)) { alert("Please provide times"); return; }
     if (isTask && new Date(taskEndDate) < new Date(taskStartDate)) { alert("End date before start"); return; }
     if (!isTask && new Date(endTime) < new Date(startTime)) { alert("End time before start"); return; }
+    const lastDay = taskEndDate || taskStartDate;
+    if (isTask && (new Date(lastDay) - new Date(taskStartDate)) / 86400000 > 366) {
+      alert("All-day events can span at most 366 days"); return;
+    }
     try {
+      setSubmitting(true);
       await addEventToUser(groupCode, selectedMember.user_id, {
         title,
         is_task: isTask,
         start_time: isTask ? `${taskStartDate}T00:00:00` : `${startTime}:00`,
-        end_time: isTask ? `${taskEndDate}T23:59:59` : `${endTime}:00`,
+        end_time: isTask ? `${lastDay}T23:59:59` : `${endTime}:00`,
         notes,
       });
       resetForm(); onNewEvent?.(); onClose();
-    } catch (e) { console.error("Error making new event", e); }
+    } catch (e) {
+      console.error("Error making new event", e);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canSubmit = title && selectedMember &&
-    (isTask ? (taskStartDate && taskEndDate) : (startTime && endTime));
+    (isTask ? taskStartDate : (startTime && endTime));
 
   return (
     <div className="sheet-backdrop fixed inset-0 bg-black/60 flex flex-col justify-end z-50">
@@ -75,11 +87,29 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
         </label>
 
         {isTask ? (
-          <input type="date"
-            className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={taskStartDate}
-            onChange={(e) => { setTaskStartDate(e.target.value); setTaskEndDate(e.target.value); }}
-          />
+          <>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Date</label>
+              <input type="date"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={taskStartDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTaskStartDate(val);
+                  if (taskEndDate && taskEndDate < val) setTaskEndDate("");
+                }}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">End date (optional)</label>
+              <input type="date"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                min={taskStartDate}
+                value={taskEndDate}
+                onChange={(e) => setTaskEndDate(e.target.value)}
+              />
+            </div>
+          </>
         ) : (
           <>
             <div>
@@ -94,7 +124,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
                 if (val) {
                   const start = new Date(val);
                   start.setHours(start.getHours() + 1);
-                  const padded = start.toISOString().slice(0, 16); // "yyyy-MM-ddTHH:mm"
+                  const padded = format(start, "yyyy-MM-dd'T'HH:mm");
                   setEndTime(padded);
                 }
               }}
@@ -123,10 +153,13 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
         />
 
         <button
-          onClick={handleSubmit} disabled={!canSubmit}
-          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold disabled:opacity-40 disabled:shadow-none shadow-md active:scale-[0.97] transition-transform duration-150"
+          onClick={handleSubmit} disabled={!canSubmit || submitting}
+          className="w-full py-3 rounded-xl bg-[var(--green)] font-semibold disabled:opacity-40 disabled:shadow-none shadow-md active:scale-[0.97] transition-transform duration-150 flex items-center justify-center gap-2"
         >
-          Create
+          {submitting && (
+            <span className="w-4 h-4 rounded-full border-2 border-black/20 border-t-black animate-spin" aria-hidden="true" />
+          )}
+          {submitting ? "Creating…" : "Create"}
         </button>
       </div>
     </div>

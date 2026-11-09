@@ -18,7 +18,7 @@ export const getGroupByCode = async (groupCode) => {
         };
     } catch(err) {
         console.error("failed to fetch group:", err);
-        return { users: [] };
+        return { users: [], retryable: !err.response || err.response.status >= 500 };
     }
 };
 
@@ -136,7 +136,7 @@ export const getChores = async (groupCode) => {
     return res.data;
   } catch (err) {
     console.error("failed to fetch chores:", err);
-    return [];
+    return null;
   }
 };
 
