@@ -3,13 +3,21 @@ import { useState } from 'react';
 const AddMember = ({ isOpen, onClose, onAdd }) => {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#f783a4");
+  const [adding, setAdding] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleAdd = () => {
-    if (!name.trim()) return;
-    onAdd({ name, color });
-    setName(""); setColor("#f783a4");
+  const handleAdd = async () => {
+    if (adding || !name.trim()) return;
+    try {
+      setAdding(true);
+      await onAdd({ name: name.trim(), color });
+      setName(""); setColor("#f783a4");
+    } catch (e) {
+      alert("Failed to add member");
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -17,7 +25,7 @@ const AddMember = ({ isOpen, onClose, onAdd }) => {
       <div className="sheet-panel bg-white rounded-t-2xl p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-base">Add Member</h2>
-          <button onClick={onClose} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl">✕</button>
+          <button onClick={onClose} disabled={adding} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl disabled:opacity-40">✕</button>
         </div>
         <input
           type="text" placeholder="Name"
@@ -31,10 +39,10 @@ const AddMember = ({ isOpen, onClose, onAdd }) => {
           <div className="w-8 h-8 rounded-full" style={{ backgroundColor: color }} />
         </div>
         <button
-          onClick={handleAdd} disabled={!name.trim()}
+          onClick={handleAdd} disabled={adding || !name.trim()}
           className="w-full py-3 rounded-xl bg-[var(--green)] text-white font-semibold disabled:opacity-40 shadow-md disabled:shadow-none"
         >
-          Add
+          {adding ? "Adding…" : "Add"}
         </button>
       </div>
     </div>

@@ -55,7 +55,6 @@ function createWindow() {
     autoHideMenuBar: true,
     alwaysOnTop: true,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       scrollBounce:true
@@ -78,7 +77,11 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(() => {
-  blockAds();
-  createWindow();
-});
+// A duplicate instance is already quitting (see the lock above) and must not
+// open a window on its way out.
+if (gotTheLock) {
+  app.whenReady().then(() => {
+    blockAds();
+    createWindow();
+  });
+}

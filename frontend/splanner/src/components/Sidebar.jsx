@@ -10,16 +10,13 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const selectedMember = members.find((m) => m.user_id === selectedMemberId) ?? null;
 
   const handleAddMember = async (member) => {
-    try {
-      await addUserToGroup(groupCode, member);
-      await onNewMember();
-      setIsAddOpen(false);
-    } catch (e) {
-      alert("Failed to add member");
-    }
+    await addUserToGroup(groupCode, member);
+    await onNewMember();
+    setIsAddOpen(false);
   };
 
   const closeDrawer = () => onDrawerChange(false);
@@ -34,9 +31,9 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
             title={member.name}
             className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm active:scale-95 transition-transform"
             style={{ backgroundColor: member.color, minHeight: 40, minWidth: 40 }}
-            onClick={() => { setMemberOpen(true); setSelectedMember(member); }}
+            onClick={() => { setMemberOpen(true); setSelectedMemberId(member.user_id); }}
           >
-            {member.name[0].toUpperCase()}
+            {member.name?.[0]?.toUpperCase() ?? "?"}
           </button>
         ))}
         <button
@@ -101,7 +98,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
               className="w-full flex items-center gap-3 px-4 py-3 active:bg-gray-50 transition-colors text-left"
               onClick={() => {
                 setMemberOpen(true);
-                setSelectedMember(member);
+                setSelectedMemberId(member.user_id);
                 closeDrawer();
               }}
             >
@@ -109,7 +106,7 @@ const Sidebar = ({ members, groupCode, onNewMember, onLogout, onRegenerateCode, 
                 className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 shadow-sm"
                 style={{ backgroundColor: member.color }}
               >
-                {member.name[0].toUpperCase()}
+                {member.name?.[0]?.toUpperCase() ?? "?"}
               </div>
               <span className="text-sm font-medium text-gray-700 truncate">{member.name}</span>
             </button>

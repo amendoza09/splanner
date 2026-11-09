@@ -22,9 +22,6 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
 
   const handleSubmit = async () => {
     if (submitting) return;
-    if (!title || !selectedMember) { alert("Please fill out all fields"); return; }
-    if (isTask && !taskStartDate) { alert("Please select a date"); return; }
-    if (!isTask && (!startTime || !endTime)) { alert("Please provide times"); return; }
     if (isTask && new Date(taskEndDate) < new Date(taskStartDate)) { alert("End date before start"); return; }
     if (!isTask && new Date(endTime) < new Date(startTime)) { alert("End time before start"); return; }
     const lastDay = taskEndDate || taskStartDate;
@@ -43,6 +40,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
       resetForm(); onNewEvent?.(); onClose();
     } catch (e) {
       console.error("Error making new event", e);
+      alert("Could not create this event");
     } finally {
       setSubmitting(false);
     }
@@ -56,7 +54,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
       <div className="sheet-panel bg-white rounded-t-2xl p-5 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold">New Event</h2>
-          <button onClick={() => { resetForm(); onClose(); }} className="text-gray-400 text-xl w-10 h-10 flex items-center justify-center">✕</button>
+          <button onClick={() => { resetForm(); onClose(); }} disabled={submitting} className="text-gray-400 text-xl w-10 h-10 flex items-center justify-center disabled:opacity-40">✕</button>
         </div>
 
         {/* Member selector */}

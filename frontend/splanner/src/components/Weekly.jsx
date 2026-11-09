@@ -8,11 +8,10 @@ const GRID_TEMPLATE = '36px repeat(7, 1fr)';
 const MOBILE_MAX_VISIBLE_TASKS = 1;
 const MAX_VISIBLE_TASKS = 2;
 
-const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDeleteEvent, onWeekChange }) => {
+const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onWeekChange }) => {
   const [now, setNow] = useState(new Date());
   const [allDayExpanded, setAllDayExpanded] = useState(false);
   const scrollRef = useRef(null);
-  const nowLineRef = useRef(null);
 
   const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
   const referenceDate = selectedDate ? new Date(selectedDate) : new Date();
@@ -27,7 +26,6 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
       return {
         id: event.event_id,
         title: event.title,
-        date: format(start, "yyyy-MM-dd"),
         start_time: start,
         end_time: end,
         startMinutes: start.getHours() * 60 + start.getMinutes(),
@@ -397,11 +395,11 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onDel
                         }}
                     >
                         <div />
-                        {weekDays.map((day, index) => {
+                        {weekDays.map((day) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             if (dateKey !== currentDate) return <div key={dateKey} />;
                             return (
-                                <div key="now" className="relative" ref={nowLineRef}>
+                                <div key="now" className="relative">
                                     {/* dot */}
                                     <div
                                         className="absolute w-2.5 h-2.5 rounded-full bg-[var(--red)] -left-1"

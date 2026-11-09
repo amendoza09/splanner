@@ -15,9 +15,7 @@
 :root {
   --red: #fc6f53;
   --green: #78eb67;
-  --sidebar-width: 64px;
   --touch-min: 44px;
-  --radius: 10px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --font-display: 'Fraunces', serif;
@@ -118,7 +116,6 @@ body {
   font-family: 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -133,10 +130,6 @@ input[type="date"],
 input[type="datetime-local"] {
   min-height: var(--touch-min);
   font-size: 15px;
-}
-
-* {
-  -webkit-overflow-scrolling: touch;
 }
 
 code {

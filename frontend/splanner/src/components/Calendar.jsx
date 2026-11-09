@@ -18,7 +18,7 @@ import rainIcon from '../assets/rainy.png';
 import cloudyIcon from '../assets/icon.png';
 import icon from '../assets/icon.png';
 
-const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onRefresh, onOpenMenu }) => {
+const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onOpenMenu }) => {
   const [view, setView] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [addEventOpen, setAddEventOpen] = useState(false);
@@ -55,6 +55,9 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
     const data = await getChores(groupCode);
     if (data && fetchId === latestChoresFetch.current) setChores(data);
   }, [groupCode]);
+
+  // Drops any fetch already in flight, since it may predate a change just made here.
+  const discardPendingChoreFetch = useCallback(() => { latestChoresFetch.current++; }, []);
 
   // `members` gets a new value on every server "refresh" broadcast, including
   // chore changes, so the shared list stays current without refetching on
@@ -136,7 +139,6 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
             selectedDate={selectedDate}
             onSelectedEvent={setSelectedEvent}
             onEventOpen={setEventOpen}
-            onDeleteEvent={onDeleteEvent}
             onWeekChange={setSelectedDate}
           />
         )}
@@ -153,6 +155,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onR
             chores={chores}
             setChores={setChores}
             fetchChores={fetchChores}
+            discardPendingChoreFetch={discardPendingChoreFetch}
           />
         )}
       </div>

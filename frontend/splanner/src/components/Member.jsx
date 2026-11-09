@@ -9,16 +9,26 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
   const [color, setColor] = useState(member.color);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setName(member.name); setColor(member.color); setIsEditing(false); setConfirmingRemove(false);
-  }, [member, isOpen]);
+    setIsEditing(false); setConfirmingRemove(false);
+  }, [member.user_id, isOpen]);
 
   if (!isOpen) return null;
 
   const saveChanges = async () => {
-    try { await updateUser(groupCode, member.user_id, { name, color }); onUpdate(); setIsEditing(false); }
-    catch (e) { alert("Could not update user"); }
+    if (saving || !name.trim()) return;
+    try {
+      setSaving(true);
+      await updateUser(groupCode, member.user_id, { name: name.trim(), color });
+      onUpdate();
+      setIsEditing(false);
+    } catch (e) {
+      alert("Could not update user");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteAUser = async () => {
@@ -40,7 +50,7 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
       <div className="sheet-panel bg-white rounded-t-2xl p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-base">{member.name}</h2>
-          <button onClick={onClose} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl">✕</button>
+          <button onClick={onClose} disabled={saving} className="text-gray-400 w-10 h-10 flex items-center justify-center text-xl disabled:opacity-40">✕</button>
         </div>
 
         {!isEditing ? (
@@ -61,15 +71,17 @@ const Member = ({ isOpen, onClose, groupCode, member, onUpdate, onUserDelete }) 
 
         <div className="flex gap-2">
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)}
+            <button onClick={() => { setName(member.name); setColor(member.color); setIsEditing(true); }}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 text-sm font-medium">
               <FaRegEdit /> Edit
             </button>
           ) : (
             <>
-              <button onClick={saveChanges}
-                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm shadow-md">Save</button>
-              <button onClick={() => { setName(member.name); setColor(member.color); setIsEditing(false); }}
+              <button onClick={saveChanges} disabled={saving || !name.trim()}
+                className="flex-1 py-3 rounded-xl bg-[var(--green)] font-semibold text-sm shadow-md disabled:opacity-40 disabled:shadow-none">
+                {saving ? "Saving…" : "Save"}
+              </button>
+              <button onClick={() => setIsEditing(false)}
                 className="flex-1 py-3 rounded-xl bg-gray-100 text-sm">Cancel</button>
             </>
           )}
