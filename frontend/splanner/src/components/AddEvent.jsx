@@ -37,7 +37,7 @@ const AddEvent = ({ isOpen, onClose, members, groupCode, onNewEvent }) => {
         end_time: isTask ? `${lastDay}T23:59:59` : `${endTime}:00`,
         notes,
       });
-      resetForm(); onNewEvent?.(); onClose();
+      resetForm(); onNewEvent(); onClose();
     } catch (e) {
       console.error("Error making new event", e);
       alert("Could not create this event");

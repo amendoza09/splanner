@@ -16,8 +16,6 @@ const socket = io(SOCKET_URL, {
   reconnectionDelayMax: 10000,
 });
 
-const normalizeMembers = (users) => users.map(user => ({ ...user, events: user.events ?? [] }));
-
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,7 +41,7 @@ function App() {
     setStatus(res.status);
     codeRef.current = code;
     setGroupCode(code);
-    setMembers(normalizeMembers(res.users));
+    setMembers(res.users);
     localStorage.setItem("groupCode", code);
   };
 
@@ -114,7 +112,7 @@ function App() {
         if (!code) break;
         const res = await getGroupByCode(code);
         if (code !== codeRef.current) continue;
-        if (res.status === 200) setMembers(normalizeMembers(res.users));
+        if (res.status === 200) setMembers(res.users);
         else if (res.status === 404 && !selfRotatingRef.current) clearSession();
       } while (fetchAgain.current);
     } finally {

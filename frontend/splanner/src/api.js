@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
-export const API = axios.create({
+const API = axios.create({
   baseURL: API_URL,
   timeout: 15000,
 });
@@ -16,7 +16,7 @@ export const getGroupByCode = async (groupCode) => {
         };
     } catch(err) {
         console.error("failed to fetch group:", err);
-        return { users: [], status: err.response?.status, retryable: !err.response || err.response.status >= 500 };
+        return { status: err.response?.status, retryable: !err.response || err.response.status >= 500 };
     }
 };
 

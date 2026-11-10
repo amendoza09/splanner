@@ -1,4 +1,3 @@
-import os
 import string
 import random
 from fastapi import FastAPI, Depends, HTTPException
@@ -10,10 +9,7 @@ from models import Group, User, Event, Chore
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta, time
 from typing import Optional
-from dotenv import load_dotenv
 import socketio
-
-load_dotenv()
 
 # ── Socket.IO setup ──────────────────────────────────────────────────────────
 # AsyncServer is required for ASGI (FastAPI/uvicorn)
@@ -208,8 +204,8 @@ MAX_EVENT_SPAN_DAYS = 366
 
 class EventCreate(BaseModel):
     title: str = Field(..., max_length=200)
-    start_time: datetime | None = None
-    end_time: datetime | None = None
+    start_time: datetime
+    end_time: datetime
     is_task: bool = False
     notes: str | None = Field(None, max_length=2000)
 

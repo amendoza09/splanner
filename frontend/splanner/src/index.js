@@ -7,7 +7,6 @@ import Landing from './components/Landing';
 import UserManual from './components/UserManual';
 import SelfHost from './components/SelfHost';
 import ErrorBoundary from './components/ErrorBoundary';
-import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -24,8 +23,3 @@ root.render(
     </ErrorBoundary>
   </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

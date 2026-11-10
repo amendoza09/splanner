@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameWeek } from 'date-fns';
+import { layoutEvents } from '../utils/calendar';
 
 const HOUR_HEIGHT = 65;
 const TOTAL_HOURS = 24;
@@ -14,13 +15,12 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onWee
   const scrollRef = useRef(null);
 
   const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-  const referenceDate = selectedDate ? new Date(selectedDate) : new Date();
   const currentDate = format(new Date(), 'yyyy-MM-dd');
   const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
   const nowTop = (minutesSinceMidnight / 60) * HOUR_HEIGHT;
 
   const allEvents = members.flatMap(member =>
-    (member.events || []).map(event => {
+    member.events.map(event => {
       const start = new Date(event.start_time);
       const end = new Date(event.end_time);
       return {
@@ -59,8 +59,8 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onWee
       return eachDayOfInterval({ start, end });
   };
 
-  const goToPreviousWeek = () => onWeekChange?.(subWeeks(referenceDate, 1));
-  const goToNextWeek = () => onWeekChange?.(addWeeks(referenceDate, 1));
+  const goToPreviousWeek = () => onWeekChange(subWeeks(selectedDate, 1));
+  const goToNextWeek = () => onWeekChange(addWeeks(selectedDate, 1));
 
   const toggleAllDayExpanded = () => setAllDayExpanded((prev) => !prev);
 
@@ -111,61 +111,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onWee
         return () => clearInterval(interval);
   }, []);
 
-  function layoutEvents(events) {
-    const sorted = [...events].sort((a, b) => a.startMinutes - b.startMinutes);
-
-    const overlaps = (a, b) => a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
-
-    // Build clusters via union-find style grouping
-    const clusters = [];
-    for (const event of sorted) {
-      const touching = clusters.filter(c => c.some(e => overlaps(e, event)));
-      if (touching.length === 0) {
-        clusters.push([event]);
-      } else {
-        // Merge all touching clusters together
-        const merged = touching.flat();
-        merged.push(event);
-        touching.forEach(c => clusters.splice(clusters.indexOf(c), 1));
-        clusters.push(merged);
-        }
-      }
-
-      // Within each cluster, assign columns greedily
-      const result = [];
-      for (const cluster of clusters) {
-        const cols = [];
-        for (const event of cluster) {
-          let placed = false;
-          for (let col = 0; col < cols.length; col++) {
-            if (!cols[col].some(e => overlaps(e, event))) {
-              cols[col].push(event);
-              result.push({ ...event, col, totalCols: cols.length }); // totalCols updated below
-              placed = true;
-              break;
-            }
-          }
-          if (!placed) {
-            cols.push([event]);
-            result.push({ ...event, col: cols.length - 1, totalCols: cols.length });
-          }
-        }
-        // Now we know the real totalCols for this cluster — patch it
-        const clusterIds = new Set(cluster.map(e => e.id));
-        const finalCols = cols.length;
-        result.forEach(e => {
-          if (clusterIds.has(e.id)) e.totalCols = finalCols;
-        });
-      }
-
-      return result.map(e => ({
-        ...e,
-        width: 1 / e.totalCols,
-        left: e.col / e.totalCols,
-      }));
-  }
-
-  const weekDays = generateWeekDays(referenceDate);
+  const weekDays = generateWeekDays(selectedDate);
   const hasAnyTasks = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > 0);
   const hasMobileOverflow = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > MOBILE_MAX_VISIBLE_TASKS);
   const hasDesktopOverflow = weekDays.some(d => (tasksByDate[format(d, 'yyyy-MM-dd')] || []).length > MAX_VISIBLE_TASKS);
@@ -187,7 +133,7 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onWee
                         ‹
                     </button>
                     <h2 className="w-20 text-center text-xs font-semibold text-gray-800">
-                        {format(referenceDate, 'MMMM')}
+                        {format(selectedDate, 'MMMM')}
                     </h2>
                     <button
                         onClick={goToNextWeek}
@@ -197,9 +143,9 @@ const WeeklyView = ({ members, selectedDate, onEventOpen, onSelectedEvent, onWee
                     >
                         ›
                     </button>
-                    {!isSameWeek(referenceDate, new Date(), { weekStartsOn: 0 }) && (
+                    {!isSameWeek(selectedDate, new Date(), { weekStartsOn: 0 }) && (
                         <button
-                            onClick={() => onWeekChange?.(new Date())}
+                            onClick={() => onWeekChange(new Date())}
                             className="absolute right-2 top-0.5 text-[11px] font-medium text-gray-600 px-2 py-0.5 rounded-full border border-gray-300 hover:bg-gray-100 active:bg-gray-200 transition-colors"
                             style={{ minHeight: 'unset', minWidth: 'unset' }}
                         >

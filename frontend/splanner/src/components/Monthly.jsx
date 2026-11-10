@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval,
-  addMonths, subMonths, getDay, isSameMonth } from 'date-fns';
+import { format, addMonths, subMonths, isSameMonth } from 'date-fns';
+import { generateMonthDays } from '../utils/calendar';
 
 const MonthlyView = ({ members, onDayPress }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -8,35 +8,18 @@ const MonthlyView = ({ members, onDayPress }) => {
   const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
   const currentDate = format(new Date(), 'yyyy-MM-dd');
 
-  const generateMonthDays = (date) => {
-    const start = startOfMonth(date);
-    const end = endOfMonth(date);
-    const days = eachDayOfInterval({ start, end });
-    const emptyCells = Array(getDay(start)).fill(null);
-    const full = [...emptyCells, ...days];
-    const rem = full.length % 7;
-    return rem !== 0 ? [...full, ...Array(7 - rem).fill(null)] : full;
-  };
-
-  // Build a map of date -> array of { memberColor, memberName, title, is_task }
+  // Build a map of date -> array of { memberColor, memberName, title }
   const eventsByDate = useMemo(() => {
     const map = {};
     members.forEach(member => {
-      (member.events || []).forEach(event => {
-        const start = new Date(event.start_time);
-        const end = new Date(event.end_time);
-        let current = new Date(start);
-        while (current <= end) {
-          const key = format(current, 'yyyy-MM-dd');
-          if (!map[key]) map[key] = [];
-          map[key].push({
-            memberColor: member.color,
-            memberName: member.name,
-            title: event.title,
-            is_task: event.is_task,
-          });
-          current.setDate(current.getDate() + 1);
-        }
+      member.events.forEach(event => {
+        const key = format(new Date(event.start_time), 'yyyy-MM-dd');
+        if (!map[key]) map[key] = [];
+        map[key].push({
+          memberColor: member.color,
+          memberName: member.name,
+          title: event.title,
+        });
       });
     });
     return map;
