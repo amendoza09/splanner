@@ -67,7 +67,7 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
           padding: 15px;
           border-radius: 100px;
           border: none;
-          background: var(--green, #6cc86a);
+          background: var(--green);
           color: #fff;
           font-family: 'DM Sans', sans-serif;
           font-size: 15px;
@@ -139,9 +139,7 @@ const GroupCodeScreen = ({ onSubmit, onCreateGroup, loadingJoin, loadingCreate, 
 
       <div className="login-wrap">
 
-        <div className="">
-          <img src={logo} alt="Logo" className="h-[15rem]"/>
-        </div>
+        <img src={logo} alt="Logo" className="h-[15rem]"/>
 
         <input
           className="code-input"

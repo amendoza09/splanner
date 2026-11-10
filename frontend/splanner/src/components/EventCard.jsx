@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { deleteEvent, updateEvent } from "../api";
 import { FaRegTrashAlt, FaRegEdit } from "react-icons/fa";
 import ConfirmDialog from "./ConfirmDialog";
-
-// Formats as local time. A bare "yyyy-MM-dd" from a date input is read as local
-// midnight, because new Date() would otherwise treat it as UTC and shift the day.
-const toISOLocal = (val) => {
-  const d = /^\d{4}-\d{2}-\d{2}$/.test(val) ? new Date(`${val}T00:00:00`) : new Date(val);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-};
+import { toISOLocal } from "../utils/calendar";
 
 const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupCode }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -44,7 +37,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
     try {
       setDeleting(true);
       await deleteEvent(groupCode, event.user_id, event.id);
-      onDelete?.();
+      onDelete();
       onClose();
     } catch (err) {
       console.error("Failed to delete event", err);
@@ -74,7 +67,7 @@ const EventCard = ({ isOpen, onClose, event, onDelete, onUpdate, members, groupC
         notes,
         is_task: task,
       });
-      onUpdate?.();
+      onUpdate();
       onClose();
     } catch (err) {
       console.error("Failed to update event", err);

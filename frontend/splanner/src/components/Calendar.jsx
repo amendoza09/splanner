@@ -113,7 +113,7 @@ const Calendar = ({ members, groupCode, onNewEvent, onDeleteEvent, onUpdate, onO
         </div>
 
         <div className="flex flex-row gap-5">
-          {/* Weather + refresh */}
+          {/* Weather */}
           <div className="flex">
             {temp && (
               <div className="flex gap-2">
